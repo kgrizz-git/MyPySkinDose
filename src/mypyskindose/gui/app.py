@@ -38,6 +38,7 @@ ORIENTATIONS = ["head_first_supine", "feet_first_supine"]
 # ── page ───────────────────────────────────────────────────────────────────
 @ui.page("/")
 def index():
+    dprint("GUI", "Rendering index page (client connected or reloaded)")
     dark = ui.dark_mode(state.dark_mode)
 
     # ── header ────────────────────────────────────────────────────────────
@@ -62,6 +63,7 @@ def index():
 
         def go(name: str):
             tabs.set_value(name)
+            state.active_tab = name
 
         ui.button("1 · Upload", on_click=lambda: go("upload")).props("flat align=left").classes("full-width text-left")
         ui.button("2 · Geometry", on_click=lambda: go("geometry")).props("flat align=left").classes("full-width")
@@ -74,7 +76,7 @@ def index():
         run_btn_drawer = ui.button("▶  Run Calculation", color="positive").classes("full-width")
 
     # ── main tabs ─────────────────────────────────────────────────────────
-    with ui.tabs().classes("w-full") as tabs:
+    with ui.tabs().classes("w-full").on("update:model-value", lambda e: setattr(state, "active_tab", e.args)) as tabs:
         t_upload = ui.tab("upload", label="1 · Upload")
         t_geometry = ui.tab("geometry", label="2 · Geometry")
         t_settings = ui.tab("settings", label="3 · Settings")
@@ -540,6 +542,14 @@ def index():
 
                 ui.button("Download PNG (right view)", on_click=download_png, icon="download").props("outline")
 
+    # ── Restore view if data already loaded ──
+    if state.rdsr_df is not None:
+        dprint("GUI", "Restoring UI state from loaded data")
+        file_label.set_text(f"📁 {state.file_name}")
+        events_label.set_text(f"📊 {len(state.rdsr_df)} events")
+        _refresh_event_table()
+        if hasattr(state, "active_tab") and state.active_tab:
+            tabs.set_value(state.active_tab)
 
 # ── figure-building helpers (called via run.io_bound) ─────────────────────
 
@@ -693,6 +703,7 @@ def run_gui(native: bool = False) -> None:
         port=8765,
         show=True,
         favicon="🩻",
+        reconnect_timeout=30.0,
     )
 
 

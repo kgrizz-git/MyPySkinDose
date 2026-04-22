@@ -1,6 +1,6 @@
 {
-    "GUI": false,
-    "PROCESSING": false,
-    "CALCULATION": false,
-    "RENDERING": false
+    "GUI": true,
+    "PROCESSING": true,
+    "CALCULATION": true,
+    "RENDERING": true
 }
