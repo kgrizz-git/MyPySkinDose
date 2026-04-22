@@ -1,5 +1,5 @@
 @ECHO OFF
 cd %~dp0
-cd docs
-sphinx-apidoc -o source ../src/pyskindose
-make clean && make html && cd ..
+python -m sphinx.ext.apidoc -o docs/source src/mypyskindose
+python -m sphinx -M clean docs/source docs/build
+python -m sphinx -b html docs/source docs/build/html

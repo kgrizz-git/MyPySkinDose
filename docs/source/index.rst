@@ -1,5 +1,5 @@
-Welcome to PySkinDose's documentation!
-======================================
+Welcome to MyPySkinDose's documentation!
+========================================
 
 .. toctree::
    :maxdepth: 2
@@ -8,6 +8,7 @@ Welcome to PySkinDose's documentation!
    user/background.md
    user/description.md
    user/install.md
+   user/user_guide.md
    getting_started/getting_started
    user/contribute.md
 

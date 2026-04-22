@@ -1,13 +1,191 @@
-[![ci](https://github.com/rvbCMTS/PySkinDose/actions/workflows/ci.yml/badge.svg)](https://github.com/rvbCMTS/PySkinDose/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/rvbCMTS/PySkinDose/branch/master/graph/badge.svg?token=2O32UO12V6)](https://codecov.io/gh/rvbCMTS/PySkinDose) [![Documentation Status](https://readthedocs.org/projects/pyskindose/badge/?version=latest)](http://pyskindose.readthedocs.io/en/latest/?badge=latest)
+# MyPySkinDose
 
-# pyskindose
+Modified from the upstream PySkinDose project: https://github.com/rvbCMTS/PySkinDose
 
-author: Max Hellström
+Original author: Max Hellström
 
-A python program for calculating 3D skin dose maps based on DICOM X-ray Radiation Dose Structured Reports.
+This repository keeps the PySkinDose codebase for estimating 3D skin dose maps from DICOM X-ray Radiation Dose Structured Reports (RDSR), while allowing local modifications and further development in this fork.
 
-Requires Python 3.8 or above. NB! Will soon be upgraded to require Python 3.10 or above.
+The package name in code is `mypyskindose`.
 
-The documentation is under construction and can be found at [https://pyskindose/readthedocs.io](https://pyskindose.readthedocs.io)
+## Requirements
 
-Stay tuned!
+- Python 3.10 or above
+- A settings configuration, typically based on [src/mypyskindose/settings_example.json](src/mypyskindose/settings_example.json)
+- An RDSR DICOM file, or a normalized/pre-parsed JSON export of RDSR data
+
+## Installation
+
+For local development, install the project in editable mode:
+
+```bash
+pip install -e .
+```
+
+If you only need the documentation tooling as well:
+
+```bash
+pip install -r docs/requirements.txt
+```
+
+## What this code is for
+
+PySkinDose is meant to be used in a few different ways:
+
+1. Inspect or debug the examination geometry before doing dose calculations.
+2. Step through irradiation events from an RDSR study to understand beam orientation and positioning.
+3. Calculate a skin dose map on a mathematical or human phantom.
+4. Export the calculation result as HTML, JSON, or a Python dictionary for downstream processing.
+5. Run the analysis headlessly from your own Python scripts.
+
+The main user-facing workflow is:
+
+1. Load or create a `PyskindoseSettings` object.
+2. Choose a phantom and positioning.
+3. Select a mode such as `plot_setup`, `plot_procedure`, `plot_event`, or `calculate_dose`.
+4. Run `main()` with a path to an RDSR file.
+5. Review the interactive plot or exported result.
+
+## Quick Start with Jupyter Notebook
+
+**New to PySkinDose?** The easiest way to learn is to start with the interactive getting-started notebook:
+
+📓 **[docs/source/getting_started/getting_started.ipynb](docs/source/getting_started/getting_started.ipynb)**
+
+This notebook walks you through:
+- Loading and configuring settings
+- Setting up different phantom models and positioning
+- Inspecting RDSR procedures interactively
+- Running calculations and generating dose maps
+- Exporting results in different formats
+
+To run the notebook:
+```bash
+pip install -e .
+pip install jupyter
+jupyter notebook docs/source/getting_started/getting_started.ipynb
+```
+
+If you prefer to learn by example with code snippets instead, continue to the section below.
+
+## Typical usage
+
+### 1. Start from the example settings
+
+```python
+from mypyskindose import PyskindoseSettings, load_settings_example_json
+from mypyskindose.main import main
+
+settings = PyskindoseSettings(settings=load_settings_example_json())
+settings.mode = "plot_setup"
+settings.phantom.model = "cylinder"
+
+main(settings=settings)
+```
+
+This is useful for checking the initial geometry, patient/table positioning, and phantom choice before loading a real study.
+
+### 2. Examine a procedure from an RDSR file
+
+```python
+from mypyskindose import PyskindoseSettings, get_path_to_example_rdsr_files, load_settings_example_json
+from mypyskindose.main import main
+
+settings = PyskindoseSettings(settings=load_settings_example_json())
+settings.mode = "plot_procedure"
+settings.phantom.model = "cylinder"
+settings.plot.max_events_for_patient_inclusion = 0
+
+rdsr_dir = get_path_to_example_rdsr_files()
+main(settings=settings, file_path=rdsr_dir / "siemens_axiom_example_procedure.dcm")
+```
+
+Use `plot_procedure` to scroll through irradiation events and understand how the beam geometry changes over the study.
+
+### 3. Calculate a dose map
+
+```python
+from mypyskindose import PyskindoseSettings, get_path_to_example_rdsr_files, load_settings_example_json
+from mypyskindose.main import main
+
+settings = PyskindoseSettings(settings=load_settings_example_json())
+settings.mode = "calculate_dose"
+settings.output_format = "dict"
+settings.plot.plot_dosemap = True
+settings.phantom.model = "human"
+settings.phantom.human_mesh = "hudfrid"
+
+rdsr_dir = get_path_to_example_rdsr_files()
+output = main(settings=settings, file_path=rdsr_dir / "siemens_axiom_example_procedure.dcm")
+
+print(f"Estimated PSD: {output['psd']:.1f} mGy")
+```
+
+When `settings.output_format` is set to `dict` or `json`, the result can be used programmatically. The exported result includes items such as patient/table/pad data, event geometry, correction factors, dose map data, and peak skin dose.
+
+### 4. Run headless with pre-normalized data
+
+If you already have normalized RDSR data in a pandas `DataFrame`, use `analyze_normalized_data_with_custom_settings_object()`.
+
+```python
+import pandas as pd
+from mypyskindose import load_settings_example_json
+from mypyskindose.main import analyze_normalized_data_with_custom_settings_object
+
+settings = load_settings_example_json()
+normalized_data = pd.DataFrame(...)  # your normalized RDSR data
+
+result = analyze_normalized_data_with_custom_settings_object(
+    data_norm=normalized_data,
+    settings=settings,
+    output_format="json",
+)
+```
+
+## Useful helpers
+
+The package includes helper functions that make exploration easier:
+
+- `load_settings_example_json()` loads a ready-made settings template.
+- `print_available_human_phantoms()` lists available human phantom meshes.
+- `get_path_to_example_rdsr_files()` returns the folder containing bundled example RDSR files.
+- `print_example_rdsr_files()` prints the bundled example filenames.
+
+## Settings and modes
+
+Important settings live in [src/mypyskindose/settings_example.json](src/mypyskindose/settings_example.json) and the settings classes under [src/mypyskindose/settings](src/mypyskindose/settings).
+
+Common modes are:
+
+- `plot_setup`: plot the initial geometry without loading an irradiation sequence
+- `plot_event`: inspect one irradiation event
+- `plot_procedure`: inspect the full event sequence
+- `calculate_dose`: compute the dose map and peak skin dose estimate
+
+Common phantom models are:
+
+- `plane`
+- `cylinder`
+- `human`
+
+## Documentation
+
+Documentation sources live under [docs/source](docs/source), including the getting-started notebook and user guide material.
+
+To build the HTML documentation locally from this repository:
+
+```bash
+pip install -e .
+pip install -r docs/requirements.txt
+python -m sphinx -b html docs/source docs/build/html
+```
+
+Then open:
+
+- [docs/build/html/index.html](docs/build/html/index.html)
+
+## Notes for this fork
+
+- This repository is a modified fork of the upstream PySkinDose project.
+- Upstream project page: https://github.com/rvbCMTS/PySkinDose
+- This fork can evolve independently while still preserving attribution to the original project.

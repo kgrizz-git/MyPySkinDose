@@ -1,4 +1,4 @@
-from pyskindose import constants as c
+from mypyskindose import constants as c
 
 DEVELOPMENT_PARAMETERS = dict(
     # modes: 'calculate_dose', 'plot_setup', 'plot_event', 'plot_procedure'

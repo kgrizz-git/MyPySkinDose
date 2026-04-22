@@ -5,21 +5,21 @@ import numpy as np
 import pandas as pd
 
 from manual_tests.base_dev_settings import DEVELOPMENT_PARAMETERS
-from pyskindose.constants import (
+from mypyskindose.constants import (
     KEY_NORMALIZATION_ACQUISITION_PLANE,
     KEY_NORMALIZATION_FILTER_SIZE_ALUMINUM,
     KEY_NORMALIZATION_FILTER_SIZE_COPPER,
     KEY_NORMALIZATION_KVP,
     KEY_NORMALIZATION_MODEL_NAME,
 )
-from pyskindose.corrections import (
+from mypyskindose.corrections import (
     calculate_k_bs,
     calculate_k_isq,
     calculate_k_med,
     calculate_k_tab,
 )
-from pyskindose.geom_calc import fetch_and_append_hvl
-from pyskindose.settings import PyskindoseSettings
+from mypyskindose.geom_calc import fetch_and_append_hvl
+from mypyskindose.settings import PyskindoseSettings
 
 P = Path(__file__).parent.parent.parent
 sys.path.insert(1, str(P.absolute()))

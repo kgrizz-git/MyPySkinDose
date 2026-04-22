@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
-from pyskindose.geom_calc import Triangle, convert_from_m_to_cm, convert_from_mm_to_cm
+from mypyskindose.geom_calc import Triangle, convert_from_m_to_cm, convert_from_mm_to_cm
 
 P = Path(__file__).parent.parent.parent
 sys.path.insert(1, str(P.absolute()))

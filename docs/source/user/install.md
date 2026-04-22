@@ -9,6 +9,6 @@ Installing PySkinDose provides access to two interfaces.
 To install PySkinDose, run the following, preferably in a virtual environment:
 
 ```bash
-pip install pyskindose
+pip install mypyskindose
 ```
 

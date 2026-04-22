@@ -1,7 +1,7 @@
 [project]
-name = "pyskindose"
+name = "mypyskindose"
 version = "25.1.1"
-description = "Tools and script for calculating peak skin dose and create dose maps for fluoroscopic exams from RDSR data"
+description = "Tools and script for calculating peak skin dose and create dose maps for fluoroscopic exams from RDSR data (fork of PySkinDose)"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
@@ -34,14 +34,14 @@ zip-safe = false
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["pyskindose*"]
-exclude = ["pyskindose.egg-info*"]
+include = ["mypyskindose*"]
+exclude = ["mypyskindose.egg-info*", "pyskindose.egg-info*"]
 
 
 [project-urls]
-"Homepage" = "https://github.com/rvbCMTS/PySkinDose"
-"Bug Tracker" = "https://github.com/rvbCMTS/PySkinDose/issues"
-"Documentation" = "https://pyskindose.readthedocs.io/en/latest/index.html"
+"Homepage" = "https://github.com/kgrizz-git/MyPySkinDose"
+"Bug Tracker" = "https://github.com/kgrizz-git/MyPySkinDose/issues"
+"Documentation" = "https://github.com/kgrizz-git/MyPySkinDose/tree/main/docs"
 
 [build-system]
 requires = ["setuptools>=68.2.2"]
@@ -50,12 +50,13 @@ build-backend = "setuptools.build_meta"
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = ["tests"]
+pythonpath = ["tests"]
 
 [tool.isort]
 profile = "black"
 multi_line_output = 3
 wrap_length = 79
-known_first_party = ["pyskindose"]
+known_first_party = ["mypyskindose"]
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 src_paths = ["src", "tests"]
 skip_glob = ["**/__init__.py", "**/migrations", ".venv", ".venv39", ".github", ".pytest_cache"]

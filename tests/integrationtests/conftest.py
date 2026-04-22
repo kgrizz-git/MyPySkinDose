@@ -5,10 +5,10 @@ import pandas as pd
 import pydicom
 import pytest
 
-import pyskindose.constants as c
-from pyskindose import rdsr_normalizer
-from pyskindose.rdsr_parser import rdsr_parser
-from pyskindose.settings import PyskindoseSettings
+import mypyskindose.constants as c
+from mypyskindose import rdsr_normalizer
+from mypyskindose.rdsr_parser import rdsr_parser
+from mypyskindose.settings import PyskindoseSettings
 
 
 @pytest.fixture(scope="function")
@@ -61,7 +61,7 @@ def example_settings() -> PyskindoseSettings:
 
 @pytest.fixture(scope="function")
 def example_rdsr_path() -> Path:
-    return Path(__file__).parent.parent.parent / "src/pyskindose/example_data/RDSR"
+    return Path(__file__).parent.parent.parent / "src/mypyskindose/example_data/RDSR"
 
 
 @pytest.fixture(scope="function")

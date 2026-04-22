@@ -1,1 +1,0 @@
-from .pyskindose_settings import PyskindoseSettings, initialize_settings

@@ -14,19 +14,19 @@ import sys
 #
 from pathlib import Path
 
-# sys.path.insert(0, os.path.abspath('src/pyskindose'))
-project_root = Path(__file__).parent.parent.parent / "src" / "pyskindose"
+# sys.path.insert(0, os.path.abspath('src'))
+project_root = Path(__file__).parent.parent.parent / "src"
 sys.path.insert(0, str(project_root.absolute()))
 
 
 # -- Project information -----------------------------------------------------
 
-project = "PySkinDose"
+project = "MyPySkinDose"
 copyright = "2020, Max Hellström"
 author = "Max Hellström"
 
 # The full version, including alpha/beta/rc tags
-release = "19.6.0"
+release = "25.1.1"
 
 
 # -- General configuration ---------------------------------------------------
@@ -46,7 +46,7 @@ extensions = [
 default_dark_mode = True
 
 # Avoid STIX-font fallback
-mathjax_config = {"HTML-CSS": {"availableFonts": ["TeX"]}}
+mathjax4_config = {"HTML-CSS": {"availableFonts": ["TeX"]}}
 
 
 # Add any paths that contain templates here, relative to this directory.

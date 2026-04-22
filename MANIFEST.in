@@ -1,6 +1,6 @@
-include src/pyskindose/settings_example.json
-include src/pyskindose/table_data/*.csv
-include src/pyskindose/table_data/hvl_tables/*.csv
-include src/pyskindose/phantom_data/*.stl
-include src/pyskindose/example_data/RDSR/*.dcm
-include src/pyskindose/normalization_settings.json
+include src/mypyskindose/settings_example.json
+include src/mypyskindose/table_data/*.csv
+include src/mypyskindose/table_data/hvl_tables/*.csv
+include src/mypyskindose/phantom_data/*.stl
+include src/mypyskindose/example_data/RDSR/*.dcm
+include src/mypyskindose/normalization_settings.json

@@ -9,10 +9,11 @@ logs/
 __pycache__/
 **/__pycache__/
 .ipynb_checkpoints
+.venv/
 
 scratch*
 #RDSR/clinical*
-src/pyskindose/example_data/RDSR/clinical*
+src/mypyskindose/example_data/RDSR/clinical*
 
 .DS_Store
 temp*
@@ -26,4 +27,4 @@ corrections.db
 
 tests/manual_tests/.ipynb_checkpoints/
 
-src/pyskindose/.ipynb_checkpoints/
+src/mypyskindose/.ipynb_checkpoints/

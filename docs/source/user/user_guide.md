@@ -6,7 +6,7 @@ Sometimes you might want to run PySkinDose without having to look at the output 
 
 ```python
 import pandas as pd
-from pyskindose import analyze_normalized_data_with_custom_settings_object
+from mypyskindose import analyze_normalized_data_with_custom_settings_object
 
 settings = '<the-entire-settings-file-as-json-string>'
 normalized_data = pd.DataFrame(columns=[

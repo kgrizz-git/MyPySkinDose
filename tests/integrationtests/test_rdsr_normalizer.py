@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from pyskindose.constants import (
+from mypyskindose.constants import (
     KEY_NORMALIZATION_FILTER_SIZE_ALUMINUM,
     KEY_NORMALIZATION_FILTER_SIZE_COPPER,
     KEY_RDSR_FILTER_MATERIAL,
@@ -9,7 +9,7 @@ from pyskindose.constants import (
     KEY_RDSR_FILTER_MIN,
     KEY_RDSR_FILTER_TYPE,
 )
-from pyskindose.rdsr_normalizer import rdsr_normalizer
+from mypyskindose.rdsr_normalizer import rdsr_normalizer
 
 
 def test_that_multiple_xray_filter_materials_are_extracted_during_normalization_if_present(
