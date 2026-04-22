@@ -14,6 +14,7 @@ from mypyskindose.constants import (
     RUN_ARGUMENTS_OUTPUT_HTML,
     RUN_ARGUMENTS_OUTPUT_JSON,
 )
+from mypyskindose.debug import dprint
 from mypyskindose.dev_data import DEVELOPMENT_PARAMETERS
 from mypyskindose.helpers.parse_settings_to_settings_class import (
     parse_settings_to_settings_class,
@@ -48,9 +49,13 @@ def main(file_path: Optional[str] = None, settings: Union[str, dict, PyskindoseS
     """
     settings = parse_settings_to_settings_class(settings=settings)
 
+    dprint("PROCESSING", f"Reading and normalizing RDSR data from {file_path}")
     data_norm = read_and_normalise_rdsr_data(rdsr_filepath=file_path, settings=settings)
+    dprint("PROCESSING", f"RDSR data normalized successfully. Rows: {len(data_norm)}")
 
+    dprint("PROCESSING", "Calling analyze_data")
     output = analyze_data(normalized_data=data_norm, settings=settings)
+    dprint("PROCESSING", "analyze_data finished")
 
     if settings.output_format in ("dict", "json"):
         return output
@@ -89,6 +94,7 @@ def analyze_normalized_data_with_custom_settings_object(
     settings = parse_settings_to_settings_class(settings=settings)
     settings.output_format = output_format.casefold()
 
+    dprint("PROCESSING", "Calling analyze_data from analyze_normalized_data_with_custom_settings_object")
     return analyze_data(normalized_data=data_norm, settings=settings)
 
 

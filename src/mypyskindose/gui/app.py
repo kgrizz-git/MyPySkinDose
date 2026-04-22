@@ -25,6 +25,7 @@ from .helpers import (
     run_calculation,
 )
 from .state import reset_results, state
+from mypyskindose.debug import dprint
 
 # ── constants ──────────────────────────────────────────────────────────────
 HUMAN_MESHES = get_human_mesh_names()
@@ -95,6 +96,7 @@ def index():
                 upload_status = ui.label("").classes("text-caption")
 
                 async def handle_upload(e):
+                    dprint("GUI", f"Uploading file {e.name}")
                     with tempfile.NamedTemporaryFile(suffix=".dcm", delete=False) as tmp:
                         tmp.write(e.content.read())
                         tmp_path = Path(tmp.name)
@@ -332,6 +334,7 @@ def index():
             calc_status_label = ui.label("").classes("text-caption text-grey-6 q-mb-md")
 
             async def do_calculate():
+                dprint("GUI", "Calculate button clicked")
                 if state.rdsr_df is None:
                     ui.notify("Load an RDSR file first (tab 1)", type="warning")
                     return
@@ -346,6 +349,7 @@ def index():
                     calc_progress.set_value(fraction)
                     calc_status_label.set_text(label)
 
+                dprint("GUI", "Running calculation via io_bound")
                 ok, msg = await run.io_bound(run_calculation, state, progress_cb)
 
                 calc_progress.set_value(1.0)
@@ -681,6 +685,7 @@ def _make_dosemap_png() -> bytes | None:
 
 def run_gui(native: bool = False) -> None:
     """Launch the MyPySkinDose NiceGUI app."""
+    dprint("GUI", f"Starting run_gui, native={native}")
     ui.run(
         title="MyPySkinDose",
         native=native,

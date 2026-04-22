@@ -13,6 +13,7 @@ from mypyskindose.phantom_class import Phantom
 from mypyskindose.plotting.create_dose_map_plot import create_dose_map_plot
 from mypyskindose.plotting.create_geometry_plot import create_geometry_plot
 from mypyskindose.settings import PyskindoseSettings, initialize_settings
+from mypyskindose.debug import dprint
 
 
 def analyze_data(
@@ -42,24 +43,30 @@ def analyze_data(
             f"Invalid output format specified. Must be one of {'.'.join(c.RUN_ARGUMENTS_VALID_OUTPUT_FORMATS)}"
         )
 
+    dprint("CALCULATION", "Creating table and pad phantoms")
     # create table, pad and patient phantoms.
     table = Phantom(phantom_model=c.PHANTOM_MODEL_TABLE, phantom_dim=settings.phantom.dimension)
 
     pad = Phantom(phantom_model=c.PHANTOM_MODEL_PAD, phantom_dim=settings.phantom.dimension)
 
+    dprint("CALCULATION", "Calculating rotation matrices")
     normalized_data = calculate_rotation_matrices(normalized_data)
 
+    dprint("RENDERING", "Creating geometry plot")
     create_geometry_plot(normalized_data=normalized_data, table=table, pad=pad, settings=settings)
 
+    dprint("CALCULATION", "Calculating dose")
     patient, output = calculate_dose(normalized_data=normalized_data, settings=settings, table=table, pad=pad)
 
     if settings.output_format in [c.RUN_ARGUMENTS_OUTPUT_DICT, c.RUN_ARGUMENTS_OUTPUT_JSON]:
+        dprint("PROCESSING", "Formatting analysis result for export")
         mypyskindose_output: Union[PySkinDoseOutput, dict[str, Any], str] = format_analysis_result_for_export(
             output, patient=patient, table=table, pad=pad, data_norm=normalized_data, settings=settings
         )
 
         return mypyskindose_output
 
+    dprint("RENDERING", "Creating dose map plot")
     create_dose_map_plot(
         patient=patient,
         settings=settings,
