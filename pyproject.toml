@@ -27,6 +27,9 @@ dependencies = [
     "rich",
 ]
 
+[project.optional-dependencies]
+gui = ["streamlit>=1.35.0"]
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 include-package-data = true

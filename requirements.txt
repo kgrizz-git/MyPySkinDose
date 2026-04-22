@@ -11,4 +11,5 @@ myst-parser
 black
 isort
 pydocstyle
+streamlit>=1.35.0
 -e .
