@@ -28,7 +28,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-gui = ["streamlit>=1.35.0"]
+gui = ["nicegui>=2.0.0"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}

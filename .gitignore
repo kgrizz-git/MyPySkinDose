@@ -19,6 +19,8 @@ src/mypyskindose/example_data/RDSR/clinical*
 temp*
 !settings_example.json
 .mypy_cache/
+.ruff_cache/
+.pytest_cache/
 */pyskindose.egg*
 */*/corrections\.db
 

@@ -12,4 +12,5 @@ black
 isort
 pydocstyle
 streamlit>=1.35.0
+nicegui>=2.0.0
 -e .

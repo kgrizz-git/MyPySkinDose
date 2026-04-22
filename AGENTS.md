@@ -11,6 +11,7 @@ It is a fork of [PySkinDose](https://github.com/rvbCMTS/PySkinDose). The package
 ## Detailed documentation
 
 - **[dev-docs/CODEBASE_OVERVIEW.md](dev-docs/CODEBASE_OVERVIEW.md)** — full architecture, data flow, all settings, classes, and functions
+- **[dev-docs/FEATURE_INVENTORY.md](dev-docs/FEATURE_INVENTORY.md)** — exhaustive list of every feature: calculations, rendering, settings, outputs, CLI, API
 - **[dev-docs/UI_ANALYSIS.md](dev-docs/UI_ANALYSIS.md)** — current UI state and what exists today
 - **[dev-docs/GUI_PLAN.md](dev-docs/GUI_PLAN.md)** — comprehensive GUI implementation plan (Streamlit, phases, screen designs)
 
@@ -79,10 +80,10 @@ See [dev-docs/GUI_PLAN.md](dev-docs/GUI_PLAN.md) for the full implementation pla
 
 1. No standalone GUI exists yet — only Plotly plots in a browser/notebook
 2. The `--mode gui` CLI flag is defined but not implemented
-3. **Chosen path: Streamlit app in `src/mypyskindose/gui/`** (see GUI_PLAN.md §2 for rationale)
+3. **Chosen path: NiceGUI app in `src/mypyskindose/gui/`** (see GUI_PLAN.md §2 for rationale)
 4. Phase 1: single-page app — upload RDSR → configure → calculate → view PSD + dose map
-5. Phase 2: multi-page app with geometry preview, full settings form, export
-6. Phase 3: PDF report generation
+5. Phase 2: multi-step app with geometry preview, full settings form, export
+6. Phase 3: PDF report generation via `reportlab`
 
 ## Development setup
 
@@ -101,8 +102,10 @@ Example RDSR files are in `src/mypyskindose/example_data/RDSR/`.
 ## Conventions
 
 - Python 3.10+
+- **Cross-platform: Windows, macOS, Linux** — always use `pathlib.Path` for file paths, never string concatenation with `/` or `\`
 - Line length: 120 (ruff/black)
 - All units in **cm** unless otherwise noted
 - Settings always passed as `PyskindoseSettings` object internally; JSON/dict accepted at the boundary
 - Correction factors are dimensionless floats in range 0–1 (or slightly above 1 for backscatter)
 - The coordinate system: X = lateral, Y = longitudinal, Z = vertical
+- GUI dependencies are optional extras: `pip install mypyskindose[gui]` — do not add them to core dependencies
