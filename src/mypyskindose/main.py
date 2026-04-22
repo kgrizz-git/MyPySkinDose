@@ -127,14 +127,26 @@ def get_argument_parser(arguments) -> argparse.Namespace:
         help="Path to the settings file to use if a specific settings file is required",
     )
 
+    parser.add_argument(
+        "--native",
+        action="store_true",
+        default=False,
+        dest="native",
+        help="Open GUI in a native desktop window instead of a browser tab (requires pywebview)",
+    )
+
     return parser.parse_args(arguments)
 
 
 if __name__ == "__main__":
-    args = get_argument_parser(sys.argv)
+    args = get_argument_parser(sys.argv[1:])
 
-    if (run_settings := args.settings) is None:
-        logger.warning("No settings specified. Running with development parameters")
-        run_settings = DEVELOPMENT_PARAMETERS
+    if args.mode == RUN_ARGUMENTS_MODE_GUI:
+        from mypyskindose.gui.app import run_gui
+        run_gui(native=getattr(args, "native", False))
+    else:
+        if (run_settings := args.settings) is None:
+            logger.warning("No settings specified. Running with development parameters")
+            run_settings = DEVELOPMENT_PARAMETERS
 
-    main(file_path=args.file_path, settings=run_settings)
+        main(file_path=args.file_path, settings=run_settings)
