@@ -65,7 +65,6 @@ def run_calculation(state: AppState, progress_cb=None) -> tuple[bool, str]:
     """
     try:
         from mypyskindose.analyze_data import analyze_data
-        from mypyskindose.helpers.calculate_rotation_matrices import calculate_rotation_matrices
 
         settings = build_settings(state, mode="calculate_dose", output_format="dict")
 
@@ -73,8 +72,8 @@ def run_calculation(state: AppState, progress_cb=None) -> tuple[bool, str]:
         if progress_cb is not None:
             _patch_tqdm(progress_cb, total=event_count_from_state(state))
 
-        data_norm = calculate_rotation_matrices(state.rdsr_df.copy())
-        output = analyze_data(normalized_data=data_norm, settings=settings)
+        # analyze_data internally calls calculate_rotation_matrices
+        output = analyze_data(normalized_data=state.rdsr_df.copy(), settings=settings)
 
         state.output = output
         state.calculation_done = True

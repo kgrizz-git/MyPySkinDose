@@ -1,9 +1,10 @@
 """MyPySkinDose — NiceGUI app (Phase 1).
 
 Run with:
-    python -m mypyskindose --gui
+    python src/mypyskindose/main.py --mode gui
 or directly:
-    .venv/Scripts/python src/mypyskindose/gui/app.py
+    .venv/Scripts/python -m mypyskindose --mode gui
+    .venv/Scripts/python -m mypyskindose --mode gui --native
 """
 
 from __future__ import annotations
@@ -610,11 +611,18 @@ def _make_dosemap_fig():
             for i in range(len(r))
         ]
 
+        cmax = float(np.max(dose_map))
+        if cmax == 0:
+            cmax = 1.0
+
         mesh = go.Mesh3d(
             x=r[:, 0], y=r[:, 1], z=r[:, 2],
             i=ijk_data["i"], j=ijk_data["j"], k=ijk_data["k"],
             intensity=dose_map,
+            intensitymode="vertex",
             colorscale=state.colorscale,
+            cmin=0.0,
+            cmax=cmax,
             showscale=True,
             hoverinfo="text",
             text=hover,
