@@ -1,17 +1,25 @@
 # TO DO
 
+* run examples in jupyterlab and compare
 - check what all the original flow uses for inputs
     - json files like beam_collimation, beam_rotations etc?
     - normalization settings?
     - should some of the example RDSRs use other data/settings from files in the repo?
     - examples are projecting dose onto strange parts of body - seems like maybe some offset (in a setting or in RDSR) isn't being applied
-- K_IRP is all "-" in results table - took screenshot
+- K_IRP is all "-" in results table - took screenshot **These may supposed to be (originally were?) correction factors, not kerma?**
+* show more details of irradiation events after loading, or have button for expanded rdsr browser (need to be able to see table lateral position, table height, collimated field area, etc - all fields)
+* add sliders for patient offset parameters and show where patient is on the geometry plot in geometry tab. 
+    - also allow setting max events for rendering patient as a box or slider (max_events_for_patient_inclusion)
+    - maybe it will also be worth having some presets for patient position (e.g. cardiac, head/neck, abdominal, etc)
+    - also when user adjusts sliders, have the patient position update in real time on the geometry plot in geometry tab
 - redesign GUI according to DESIGN.md
+* add some debug/warning if any dose events have no intersection with patient
 - download/export HTML button didn't work
     - not sure about others
 - extend code to be able to handle dose event data exported from Radimetrics or similar software
     - these files may have more/less data than RDSR files
     - typically a table in csv format with one row per dose event
+    - this repo may be useful https://github.com/dhen2714/PySkinDose
     - will likely have different column names that will need to be mapped/normalized
 - add help docs explaining what all the settings are in the GUI and how to use it
 - move Geometry tab to position 3 instead of 2

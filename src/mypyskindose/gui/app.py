@@ -475,19 +475,20 @@ def index():
                 k_bs_list = corrections.get("backscatter", [])
                 k_med_list = corrections.get("medium", [])
                 k_tab_list = corrections.get("table", [])
-                kerma_list = [out["events"]["beam"] and 0] * len(hits_list)  # fallback
+                kerma_list = corrections.get("kerma", [])
 
-                # kerma per event from raw output
                 import numpy as np
                 rows = []
                 n = len(hits_list)
                 for i in range(n):
                     def _mean(lst, i):
                         try:
+                            if not lst or i >= len(lst):
+                                return "—"
                             v = lst[i]
                             if hasattr(v, "__len__") and len(v):
                                 return round(float(np.mean(v)), 4)
-                            return round(float(v), 4) if v else "—"
+                            return round(float(v), 4) if v is not None else "—"
                         except Exception:
                             return "—"
 
@@ -497,7 +498,7 @@ def index():
                         "k_bs": _mean(k_bs_list, i),
                         "k_med": _mean(k_med_list, i),
                         "k_tab": _mean(k_tab_list, i),
-                        "kerma": "—",
+                        "kerma": _mean(kerma_list, i),
                     })
                 corr_table.rows = rows
                 corr_table.update()

@@ -175,6 +175,7 @@ class EventOutput:
             "y": data_norm.Ty.tolist(),
             "z": data_norm.Tz.tolist(),
         }
+        self.kerma = data_norm[KEY_NORMALIZATION_AIR_KERMA].tolist()
         self.beam_positions, self.beam_vertex_indices, self.detector_positions, self.detector_vertex_indices = zip(
             *[self._extract_beam_data_list(data_norm=data_norm, event=event) for event in range(len(data_norm))]
         )
@@ -225,6 +226,7 @@ class EventOutput:
             "number_of_events": self.events,
             "rotation": self.rotation,
             "translation": self.translation,
+            "kerma": self.kerma,
             "phantom_object_trace_order": self.phantom_object_trace_order,
             "beam": {
                 "positions": [pos.to_dict() for pos in self.beam_positions],
@@ -448,6 +450,7 @@ class PySkinDoseOutput:
                 "medium": self.MediumCorrection,
                 "table": self.TableCorrection,
                 "inverse_square_law": self.InverseSquareLawCorrection,
+                "kerma": self.Events.to_dict().get("kerma", []),
             },
             "events": self.Events.to_dict(),
         }

@@ -56,11 +56,9 @@ def load_rdsr(file_path: Path, state: AppState) -> tuple[bool, str]:
         state.file_name = file_path.name
 
         # Extract metadata for the GUI
-        from mypyskindose.constants import KEY_RDSR_MANUFACTURER, KEY_RDSR_MANUFACTURER_MODEL_NAME
-        state.manufacturer = df[KEY_RDSR_MANUFACTURER][0] if KEY_RDSR_MANUFACTURER in df.columns else "Unknown"
-        state.model = df[KEY_RDSR_MANUFACTURER_MODEL_NAME][0] if KEY_RDSR_MANUFACTURER_MODEL_NAME in df.columns else "Unknown"
-
         norm = settings.normalization_settings
+        state.manufacturer = norm.matched_manufacturer
+        state.model = norm.matched_model
         state.normalization_method = norm.normalization_method
         state.normalization_warnings = []
         if state.normalization_method == "Fallback":
