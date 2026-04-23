@@ -22,4 +22,8 @@
     - this repo may be useful https://github.com/dhen2714/PySkinDose
     - will likely have different column names that will need to be mapped/normalized
 - add help docs explaining what all the settings are in the GUI and how to use it
-- [x] move Geometry tab to position 3 instead of 2
+    - also use docstrings for all functions in the GUI (help button could show them)
+- [x] move Geometry tab to position 3 instead of 2
+- add support for multiple exams
+- [x] is the rdsr table showing values straight out of the rdsr, or have they been processed/normalized in some way?
+    - **Answer**: The table displays **Normalized Data**. The raw RDSR has been parsed, scaled, and translated (e.g., mm to cm, coordinate alignment) to match the internal physics engine's requirements.

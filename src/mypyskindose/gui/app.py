@@ -15,6 +15,8 @@ import json
 import tempfile
 from pathlib import Path
 
+import pandas as pd
+
 from nicegui import app, run, ui
 
 from .helpers import (
@@ -26,6 +28,35 @@ from .helpers import (
 )
 from .state import reset_results, state
 from mypyskindose.debug import dprint
+
+# ── helper for file dialog ────────────────────────────────────────────────
+def _get_save_path(default_name: str, extension: str) -> str | None:
+    """Open a native Save As dialog."""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes("-topmost", True)
+        # map extension to filter
+        ext_map = {
+            "csv": [("CSV Files", "*.csv")],
+            "xlsx": [("Excel Files", "*.xlsx")],
+            "txt": [("Text Files", "*.txt")],
+            "json": [("JSON Files", "*.json")],
+            "html": [("HTML Files", "*.html")],
+            "png": [("PNG Images", "*.png")],
+        }
+        path = filedialog.asksaveasfilename(
+            initialfile=default_name,
+            defaultextension=f".{extension}",
+            filetypes=ext_map.get(extension, [("All Files", "*.*")])
+        )
+        root.destroy()
+        return path if path else None
+    except Exception as e:
+        dprint("GUI", f"Native dialog error: {e}")
+        return None
 
 # ── constants ──────────────────────────────────────────────────────────────
 HUMAN_MESHES = get_human_mesh_names()
@@ -41,11 +72,11 @@ AURORA_CSS = """
 :root {
     --bg-primary: #050505;
     --bg-secondary: #0D0D0D;
-    --aurora-purple: #A855F7;
-    --aurora-teal: #2DD4BF;
-    --aurora-pink: #EC4899;
+    --aurora-purple: #7C3AED;
+    --aurora-teal: #0F766E;
+    --aurora-pink: #9D174D;
     --text-main: #F8FAFC;
-    --border-brutal: #262626;
+    --border-brutal: #333333;
     
     /* Quasar overrides */
     --q-primary: var(--aurora-purple) !important;
@@ -56,9 +87,9 @@ body {
     color: var(--text-main) !important;
     font-family: 'Inter', sans-serif;
     background-image: 
-        radial-gradient(at 0% 0%, rgba(168, 85, 247, 0.25) 0px, transparent 60%),
-        radial-gradient(at 100% 100%, rgba(45, 212, 191, 0.15) 0px, transparent 60%),
-        radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.05) 0px, transparent 40%) !important;
+        radial-gradient(at 0% 0%, rgba(168, 85, 247, 0.08) 0px, transparent 60%),
+        radial-gradient(at 100% 100%, rgba(45, 212, 191, 0.05) 0px, transparent 60%),
+        radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.02) 0px, transparent 40%) !important;
     background-attachment: fixed;
 }
 
@@ -67,39 +98,40 @@ body {
 }
 
 .brutal-card {
-    border: 1px solid var(--border-brutal) !important;
-    background: rgba(13, 13, 13, 0.7) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: rgba(13, 13, 13, 0.8) !important;
     backdrop-filter: blur(12px);
-    box-shadow: 2px 2px 0px var(--aurora-purple) !important;
+    box-shadow: 0 0 10px rgba(45, 212, 191, 0.1) !important; /* Soft teal glow */
     border-radius: 0px !important;
 }
 
 .brutal-card-teal {
-    box-shadow: 2px 2px 0px var(--aurora-teal) !important;
+    border-color: rgba(15, 118, 110, 0.3) !important;
 }
 
 .brutal-btn {
     border-radius: 0px !important;
-    border: 1px solid var(--aurora-purple) !important;
+    border: 1px solid rgba(124, 58, 237, 0.4) !important;
     text-transform: none !important;
     font-weight: 700 !important;
     transition: all 150ms ease-out !important;
-    background: transparent !important;
+    background: rgba(124, 58, 237, 0.05) !important;
+    color: white !important;
 }
 
 .brutal-btn:hover {
     background: var(--aurora-purple) !important;
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4) !important;
-    color: white !important;
+    box-shadow: 0 0 15px rgba(124, 58, 237, 0.3) !important;
 }
 
 .brutal-btn-teal {
-    border-color: var(--aurora-teal) !important;
+    border-color: rgba(15, 118, 110, 0.4) !important;
+    background: rgba(15, 118, 110, 0.05) !important;
 }
 
 .brutal-btn-teal:hover {
     background: var(--aurora-teal) !important;
-    box-shadow: 0 0 20px rgba(45, 212, 191, 0.4) !important;
+    box-shadow: 0 0 15px rgba(15, 118, 110, 0.3) !important;
 }
 
 .mono-text {
@@ -115,16 +147,16 @@ body {
 }
 
 .q-header {
-    background-color: rgba(13, 13, 13, 0.9) !important;
-    backdrop-filter: blur(12px);
+    background-color: rgba(10, 10, 10, 0.95) !important;
+    backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--aurora-purple) !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.7) !important;
 }
 
 .q-drawer {
     background: linear-gradient(180deg, #0D0D0D 0%, #050505 100%) !important;
-    background-image: radial-gradient(at 0% 100%, rgba(168, 85, 247, 0.1) 0px, transparent 70%) !important;
-    border-right: 1px solid var(--border-brutal) !important;
+    background-image: radial-gradient(at 0% 100%, rgba(124, 58, 237, 0.05) 0px, transparent 70%) !important;
+    border-right: 2px solid var(--border-brutal) !important;
 }
 
 .q-tab {
@@ -153,6 +185,24 @@ body {
 .q-table td {
     border-bottom: 1px solid var(--border-brutal) !important;
 }
+
+/* Sticky header fix */
+.q-table__card .q-table__middle {
+    max-height: 100% !important;
+}
+.q-table__container.sticky-header thead tr:first-child th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 2 !important;
+    background: var(--bg-secondary) !important;
+    opacity: 1 !important;
+}
+
+.q-notification--positive {
+    background: #022c22 !important; /* Extremely dark emerald */
+    color: #d1fae5 !important;
+    border: 1px solid #065f46 !important;
+}
 """
 
 
@@ -179,7 +229,7 @@ def index():
         with ui.column().classes("gap-1 q-mb-md"):
             file_label = ui.label("No file loaded").classes("text-caption")
             events_label = ui.label("0 events").classes("text-caption")
-            psd_label = ui.label("PSD: 0.00 mGy").classes("text-subtitle2 text-aurora-purple font-bold")
+            psd_label = ui.label("PSD: 0.00 mGy").classes("text-subtitle2 text-aurora-pink font-bold")
 
         ui.separator().classes("q-my-md bg-zinc-800")
         ui.label("Navigation").classes("text-caption text-grey-6 q-mb-xs")
@@ -192,23 +242,25 @@ def index():
             return ui.button(label, on_click=lambda: go(target)).props("flat align=left").classes("full-width text-left py-1")
 
         nav_btn("1 · Upload", "upload")
-        nav_btn("2 · Settings", "settings")
-        nav_btn("3 · Geometry", "geometry")
-        nav_btn("4 · Calculate", "calculate")
-        nav_btn("5 · Results", "results")
-        nav_btn("6 · Export", "export")
+        nav_btn("2 · Data Table", "data")
+        nav_btn("3 · Settings", "settings")
+        nav_btn("4 · Geometry", "geometry")
+        nav_btn("5 · Calculate", "calculate")
+        nav_btn("6 · Results", "results")
+        nav_btn("7 · Export", "export")
 
         ui.separator().classes("q-my-md bg-zinc-800")
-        run_btn_drawer = ui.button("▶  Run Calculation", icon="play_arrow").classes("full-width brutal-btn")
+        run_btn_drawer = ui.button("Run Calculation", icon="play_arrow").classes("full-width brutal-btn")
 
     # ── main tabs ─────────────────────────────────────────────────────────
     with ui.tabs().classes("w-full").on("update:model-value", lambda e: setattr(state, "active_tab", e.args)) as tabs:
         ui.tab("upload", label="1 · Upload")
-        ui.tab("settings", label="2 · Settings")
-        ui.tab("geometry", label="3 · Geometry")
-        ui.tab("calculate", label="4 · Calculate")
-        ui.tab("results", label="5 · Results")
-        ui.tab("export", label="6 · Export")
+        ui.tab("data", label="2 · Data Table")
+        ui.tab("settings", label="3 · Settings")
+        ui.tab("geometry", label="4 · Geometry")
+        ui.tab("calculate", label="5 · Calculate")
+        ui.tab("results", label="6 · Results")
+        ui.tab("export", label="7 · Export")
 
     with ui.tab_panels(tabs, value="upload").classes("w-full bg-transparent"):
 
@@ -318,7 +370,80 @@ def index():
                 event_table.update()
 
         # ══════════════════════════════════════════════════════════════════
-        # TAB 2 — SETTINGS (moved to pos 2)
+        # TAB 2 — DATA TABLE
+        # ══════════════════════════════════════════════════════════════════
+        with ui.tab_panel("data"):
+            with ui.column().classes("w-full gap-6"):
+                with ui.row().classes("w-full items-center justify-between px-4"):
+                    ui.label("Irradiation Event Stream").classes("text-2xl font-bold tracking-tight")
+                    
+                    with ui.row().classes("gap-3"):
+                        ui.button("EXPORT CSV", icon="description", on_click=lambda: _local_export("csv")).classes("brutal-btn h-10")
+                        ui.button("EXPORT XLSX", icon="table_view", on_click=lambda: _local_export("xlsx")).classes("brutal-btn h-10")
+                        ui.button("EXPORT TXT", icon="text_snippet", on_click=lambda: _local_export("txt")).classes("brutal-btn h-10")
+
+                def _local_export(fmt: str):
+                    if state.rdsr_df is None:
+                        ui.notify("No data to export", type="warning")
+                        return
+                    
+                    default_name = f"irradiation_events_{state.file_name or 'data'}.{fmt}"
+                    save_path = _get_save_path(default_name, fmt)
+                    
+                    if save_path:
+                        try:
+                            p = Path(save_path)
+                            if fmt == "csv":
+                                state.rdsr_df.to_csv(p, index=True)
+                            elif fmt == "txt":
+                                with open(p, "w") as f:
+                                    f.write(state.rdsr_df.to_string())
+                            elif fmt == "xlsx":
+                                state.rdsr_df.to_excel(p, index=True)
+                            ui.notify(f"Saved to {p.name}", color="positive")
+                            return
+                        except Exception as e:
+                            ui.notify(f"Save failed: {e}", type="negative")
+
+                    # Fallback to browser download
+                    if fmt == "csv":
+                        content = state.rdsr_df.to_csv(index=True)
+                        ui.download(content.encode(), default_name)
+                    elif fmt == "txt":
+                        content = state.rdsr_df.to_string()
+                        ui.download(content.encode(), default_name)
+                    elif fmt == "xlsx":
+                        output = io.BytesIO()
+                        state.rdsr_df.to_excel(output, index=True)
+                        ui.download(output.getvalue(), default_name)
+                    ui.notify(f"Downloaded {fmt.upper()}", color="positive")
+                
+                with ui.card().classes("brutal-card w-full p-0 overflow-hidden sticky-header"):
+                    raw_data_table = ui.table(
+                        columns=[],
+                        rows=[],
+                        row_key="index",
+                    ).classes("w-full h-[600px]")
+                    # Allow horizontal scroll and sticky header
+                    raw_data_table.props('flat bordered dense virtual-scroll')
+
+                def _refresh_raw_table():
+                    if state.rdsr_df is None:
+                        raw_data_table.columns = []
+                        raw_data_table.rows = []
+                        return
+                    
+                    df = state.rdsr_df.reset_index()
+                    # create columns from df
+                    cols = [{"name": c, "label": c, "field": c, "sortable": True, "align": "left"} for c in df.columns]
+                    raw_data_table.columns = cols
+                    raw_data_table.rows = df.to_dict("records")
+                    raw_data_table.update()
+
+                ui.timer(2.0, _refresh_raw_table)
+
+        # ══════════════════════════════════════════════════════════════════
+        # TAB 3 — SETTINGS
         # ══════════════════════════════════════════════════════════════════
         with ui.tab_panel("settings"):
             with ui.column().classes("max-w-4xl mx-auto w-full gap-6"):
@@ -389,7 +514,7 @@ def index():
                         ).classes("w-full")
 
         # ══════════════════════════════════════════════════════════════════
-        # TAB 3 — GEOMETRY PREVIEW (moved to pos 3)
+        # TAB 4 — GEOMETRY PREVIEW
         # ══════════════════════════════════════════════════════════════════
         with ui.tab_panel("geometry"):
             with ui.column().classes("max-w-6xl mx-auto w-full gap-6"):
@@ -444,39 +569,64 @@ def index():
                         geom_plot.update_figure(fig)
 
         # ══════════════════════════════════════════════════════════════════
-        # TAB 4 — CALCULATE
-        # ══════════════════════════════════════════════════════════════════
-        # ══════════════════════════════════════════════════════════════════
-        # TAB 4 — CALCULATE
+        # TAB 5 — CALCULATE
         # ══════════════════════════════════════════════════════════════════
         with ui.tab_panel("calculate"):
             with ui.column().classes("max-w-4xl mx-auto w-full gap-6"):
                 ui.label("Run Dose Calculation").classes("text-2xl font-bold tracking-tight")
 
                 # settings summary card
-                with ui.card().classes("brutal-card w-full"):
-                    ui.label("Current settings").classes("text-subtitle2 q-mb-md")
+                with ui.card().classes("brutal-card w-full border border-blue-100 shadow-sm"):
+                    ui.label("Current settings").classes("text-xl font-bold q-mb-md")
 
-                    with ui.grid(columns=3).classes("w-full gap-6 mono-text text-xs"):
+                    with ui.grid(columns=3).classes("w-full gap-8 mono-text text-sm"):
                         # Section 1: Input Data
-                        with ui.column().classes("gap-1"):
-                            ui.label("Input Data").classes("text-[10px] text-aurora-teal font-bold uppercase")
-                            ui.label().bind_text_from(state, "file_name", backward=lambda v: f"File: {v if v else 'None'}")
-                            ui.label().bind_text_from(state, "rdsr_df", backward=lambda v: f"Events: {len(v) if v is not None else 0}")
-                            ui.label().bind_text_from(state, "manufacturer", backward=lambda v: f"Scanner: {v} {state.model} ({state.normalization_method})")
+                        with ui.column().classes("gap-2"):
+                            ui.label("INPUT DATA").classes("text-sm text-aurora-teal font-bold tracking-widest border-b border-aurora-teal/20 w-full q-pb-xs")
+                            
+                            with ui.column().classes("gap-0"):
+                                with ui.row().classes("gap-1"):
+                                    ui.label("File:").classes("text-aurora-teal/70 font-normal text-[12px]")
+                                    ui.label().bind_text_from(state, "file_name", backward=lambda v: f"{v if v else 'None'}").classes("font-bold")
+                                
+                                with ui.row().classes("gap-1"):
+                                    ui.label("Events:").classes("text-aurora-teal/70 font-normal text-[12px]")
+                                    ui.label().bind_text_from(state, "rdsr_df", backward=lambda v: f"{len(v) if v is not None else 0}").classes("font-bold")
+                                
+                                with ui.column().classes("gap-0"):
+                                    ui.label("Scanner:").classes("text-aurora-teal/70 font-normal text-[12px]")
+                                    ui.label().bind_text_from(state, "manufacturer", backward=lambda v: f"{v} {state.model}").classes("font-bold")
+                                    ui.label().bind_text_from(state, "normalization_method", backward=lambda v: f"({v} Matched)").classes("text-[11px] opacity-40 italic")
                         
                         # Section 2: Phantom
-                        with ui.column().classes("gap-1"):
-                            ui.label("Phantom Setup").classes("text-[10px] text-aurora-purple font-bold uppercase")
-                            ui.label().bind_text_from(state, "phantom_model", backward=lambda v: f"Model: {v}")
-                            ui.label().bind_text_from(state, "d_lon", backward=lambda v: f"Patient Offsets: {v}, {state.d_ver}, {state.d_lat} cm")
-                            ui.label().bind_text_from(state, "table_offset_x", backward=lambda v: f"Table Offsets: {v}, {state.table_offset_y}, {state.table_offset_z} cm")
+                        with ui.column().classes("gap-2"):
+                            ui.label("PHANTOM SETUP").classes("text-sm text-aurora-purple font-bold tracking-widest border-b border-aurora-purple/20 w-full q-pb-xs")
+                            
+                            with ui.column().classes("gap-0"):
+                                with ui.row().classes("gap-1"):
+                                    ui.label("Model:").classes("text-aurora-purple/70 font-normal text-[12px]")
+                                    ui.label().bind_text_from(state, "phantom_model", backward=lambda v: f"{v}").classes("font-bold")
+                                
+                                with ui.column().classes("gap-0"):
+                                    ui.label("Patient Offsets:").classes("text-aurora-purple/70 font-normal text-[12px]")
+                                    ui.label().bind_text_from(state, "d_lon", backward=lambda v: f"{v}, {state.d_ver}, {state.d_lat} cm").classes("font-bold")
+                                
+                                with ui.column().classes("gap-0"):
+                                    ui.label("Table Offsets:").classes("text-aurora-purple/70 font-normal text-[12px]")
+                                    ui.label().bind_text_from(state, "table_offset_x", backward=lambda v: f"{v}, {state.table_offset_y}, {state.table_offset_z} cm").classes("font-bold")
 
                         # Section 3: Physics
-                        with ui.column().classes("gap-1"):
-                            ui.label("Physics Parameters").classes("text-[10px] text-aurora-pink font-bold uppercase")
-                            ui.label().bind_text_from(state, "estimate_k_tab", backward=lambda v: f"k_tab: {'Estimated' if v else 'Measured'}")
-                            ui.label().bind_text_from(state, "inherent_filtration", backward=lambda v: f"Filtration: {v} mmAl")
+                        with ui.column().classes("gap-2"):
+                            ui.label("PHYSICS PARAMETERS").classes("text-sm text-aurora-pink font-bold tracking-widest border-b border-aurora-pink/20 w-full q-pb-xs")
+                            
+                            with ui.column().classes("gap-0"):
+                                with ui.row().classes("gap-1"):
+                                    ui.label("k_tab:").classes("text-aurora-pink/70 font-normal text-[12px]")
+                                    ui.label().bind_text_from(state, "estimate_k_tab", backward=lambda v: "Estimated" if v else "Measured").classes("font-bold")
+                                
+                                with ui.row().classes("gap-1"):
+                                    ui.label("Filtration:").classes("text-aurora-pink/70 font-normal text-[12px]")
+                                    ui.label().bind_text_from(state, "inherent_filtration", backward=lambda v: f"{v} mmAl").classes("font-bold")
 
                 with ui.column().classes("w-full items-center gap-4 q-mt-xl"):
                     calc_btn = ui.button("▶  Run Calculation", on_click=lambda: do_calculate(), icon="bolt").classes(
@@ -519,7 +669,7 @@ def index():
                     ui.notify(f"Error: {msg[:300]}", type="negative", timeout=10000)
 
         # ══════════════════════════════════════════════════════════════════
-        # TAB 5 — RESULTS
+        # TAB 6 — RESULTS
         # ══════════════════════════════════════════════════════════════════
         with ui.tab_panel("results"):
             with ui.column().classes("max-w-6xl mx-auto w-full gap-6"):
@@ -620,7 +770,7 @@ def index():
             ui.timer(2.0, _refresh_corr_table)
 
         # ══════════════════════════════════════════════════════════════════
-        # TAB 6 — EXPORT
+        # TAB 7 — EXPORT
         # ══════════════════════════════════════════════════════════════════
         with ui.tab_panel("export"):
             with ui.column().classes("max-w-4xl mx-auto w-full gap-6"):
@@ -650,28 +800,49 @@ def index():
                     if not state.calculation_done or state.output is None:
                         ui.notify("No data to export", color="warning")
                         return
-                    data = json.dumps(state.output, default=str, indent=2).encode()
-                    ui.download(data, "mypyskindose_results.json")
+                    default_name = f"psd_results_{state.file_name or 'data'}.json"
+                    save_path = _get_save_path(default_name, "json")
+                    if save_path:
+                        with open(save_path, "w") as f:
+                            json.dump(state.output, f, indent=4)
+                        ui.notify(f"Saved to {Path(save_path).name}", color="positive")
+                    else:
+                        content = json.dumps(state.output, indent=4)
+                        ui.download(content.encode(), default_name)
 
                 async def download_html():
                     if not state.calculation_done:
                         ui.notify("No data to export", color="warning")
                         return
-                    html_bytes = await run.io_bound(_make_dosemap_html)
-                    if html_bytes:
-                        ui.download(html_bytes, "dosemap.html")
+                    default_name = f"dose_map_{state.file_name or 'data'}.html"
+                    save_path = _get_save_path(default_name, "html")
+                    content = await run.io_bound(_make_dosemap_html)
+                    if not content:
+                        ui.notify("Failed to generate HTML", type="negative")
+                        return
+                    if save_path:
+                        with open(save_path, "wb") as f:
+                            f.write(content)
+                        ui.notify(f"Saved to {Path(save_path).name}", color="positive")
                     else:
-                        ui.notify("Export failed", color="negative")
+                        ui.download(content, default_name)
 
                 async def download_png():
                     if not state.calculation_done:
                         ui.notify("No data to export", color="warning")
                         return
-                    png_bytes = await run.io_bound(_make_dosemap_png)
-                    if png_bytes:
-                        ui.download(png_bytes, "dosemap.png")
+                    default_name = f"dose_map_{state.file_name or 'data'}.png"
+                    save_path = _get_save_path(default_name, "png")
+                    content = await run.io_bound(_make_dosemap_png)
+                    if not content:
+                        ui.notify("Failed to generate PNG (requires kaleido)", type="negative")
+                        return
+                    if save_path:
+                        with open(save_path, "wb") as f:
+                            f.write(content)
+                        ui.notify(f"Saved to {Path(save_path).name}", color="positive")
                     else:
-                        ui.notify("PNG export requires kaleido", color="warning")
+                        ui.download(content, default_name)
 
     # ── Restore view if data already loaded ──
     if state.rdsr_df is not None:
