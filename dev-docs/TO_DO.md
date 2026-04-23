@@ -29,9 +29,9 @@
     - **Answer**: The table displays **Normalized Data**. The raw RDSR has been parsed, scaled, and translated (e.g., mm to cm, coordinate alignment) to match the internal physics engine's requirements.
 - [x] make the native window appear on top when it opens
 - institute semver
-- institute trufflehog/gitleaks, dependabot, grype, etc
+- institute trufflehog/gitleaks, dependabot, grype, basedpyright, etc
 * allow manual interactive setting of table offsets in gui
 - call it GUISkinDose?
 - reduce spacing/padding around text elements in navigation section of left pane
 - soften brutalist look? and make more sleek/modern
-- reduce saturation of background gradients only? (not brightness - just curious to see less colorful)
+* refactor app.py

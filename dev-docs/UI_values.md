@@ -6,8 +6,8 @@ This document maps the primary design tokens (colors, gradients, effects) used i
 
 | Variable | Value | Purpose |
 | :--- | :--- | :--- |
-| `--bg-primary` | `#050505` | Deep black background |
-| `--bg-secondary` | `#0D0D0D` | Card/Panel background |
+| `--bg-primary` | `#090909` | Lifted black background |
+| `--bg-secondary` | `#101010` | Card/Panel background |
 | `--aurora-purple` | `#4338CA` | Navigation, Primary actions, & Sidebar glow (Darker Indigo) |
 | `--aurora-teal` | `#0D9488` | Input & Load accents (True Teal) |
 | `--aurora-pink` | `#831843` | Status & Highlights (Deep Pink) |

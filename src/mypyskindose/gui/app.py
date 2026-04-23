@@ -70,8 +70,8 @@ ORIENTATIONS = ["head_first_supine", "feet_first_supine"]
 # ── aurora-brutalist design ──────────────────────────────────────────────────
 AURORA_CSS = r"""
 :root {
-    --bg-primary: #050505;
-    --bg-secondary: #0D0D0D;
+    --bg-primary: #090909;
+    --bg-secondary: #101010;
     --aurora-purple: #4338CA; /* Darker Purple-Blue */
     --aurora-teal: #0D9488;
     --aurora-pink: #831843;
