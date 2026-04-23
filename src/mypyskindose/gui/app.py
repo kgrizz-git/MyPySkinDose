@@ -12,8 +12,17 @@ from __future__ import annotations
 import asyncio
 import io
 import json
+import os
 import tempfile
 from pathlib import Path
+
+# Fix for Windows SSL context loading error during shutdown
+# Prevents aiohttp from loading Windows certificate store which causes issues on Python 3.13
+os.environ['SSL_CERT_FILE'] = ''
+
+# Fix for colorama atexit error on Windows during shutdown
+# Prevents colorama from trying to reset console colors when handle is already closed
+os.environ['COLORAMA_DISABLE'] = '1'
 
 import pandas as pd
 
@@ -29,7 +38,7 @@ from .helpers import (
 from .state import reset_results, state
 from mypyskindose.debug import dprint
 
-GUI_VERSION = "1.0.4"
+GUI_VERSION = "1.1.0"
 
 # ── helper for file dialog ────────────────────────────────────────────────
 def _get_save_path(default_name: str, extension: str) -> str | None:
@@ -67,17 +76,25 @@ COLORSCALES = ["jet", "viridis", "plasma", "inferno", "magma", "turbo", "hot"]
 PHANTOM_MODELS = ["human", "cylinder", "plane"]
 ORIENTATIONS = ["head_first_supine", "feet_first_supine"]
 
-# ── aurora-brutalist design ──────────────────────────────────────────────────
-AURORA_CSS = r"""
+# ── sleek modern/material design ─────────────────────────────────────────────
+# IMPORTANT: If you modify any CSS values below, please update dev-docs/UI_values.md
+# to keep the documentation in sync.
+MODERN_CSS = r"""
 :root {
-    --bg-primary: #090909;
-    --bg-secondary: #101010;
-    --aurora-purple: #4338CA; /* Darker Purple-Blue */
+    --bg-primary: #0e0e0e;
+    --bg-secondary: #1d1d1d;
+    --aurora-purple: #4338CA;
     --aurora-teal: #0D9488;
     --aurora-pink: #831843;
     --text-main: #F8FAFC;
     --text-muted: #94A3B8;
-    --border-brutal: rgba(139, 148, 158, 0.2); /* Grey with tiny purple tint */
+    --glass-bg: rgba(33, 33, 33, 0.70);
+    --glass-bg-hover: rgba(33, 33, 33, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.4);
+    --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --glow-blue: rgba(59, 130, 246, 0.3);
+    --glow-purple: rgba(99, 102, 241, 0.3);
 }
 
 .text-aurora-purple { color: var(--aurora-purple) !important; }
@@ -88,10 +105,10 @@ body {
     background-color: var(--bg-primary) !important;
     color: var(--text-main) !important;
     font-family: 'Inter', -apple-system, sans-serif;
-    background-image: 
-        radial-gradient(at 100% 0%, rgba(160, 135, 150, 0.18) 0%, transparent 60%),
-        radial-gradient(at 0% 0%, rgba(120, 135, 195, 0.17) 0%, transparent 60%),
-        radial-gradient(at 100% 100%, rgba(105, 120, 135, 0.17) 0%, transparent 60%) !important;
+    background-image:
+        radial-gradient(at 100% 0%, rgba(165, 141, 149, 0.17) 0%, transparent 55%),
+        radial-gradient(at 0% 0%, rgba(126, 145, 194, 0.16) 0%, transparent 55%),
+        radial-gradient(at 100% 100%, rgba(107, 125, 138, 0.15) 0%, transparent 60%) !important;
     background-attachment: fixed;
 }
 
@@ -111,57 +128,184 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
 }
 
-.brutal-header {
+.modern-header {
     background-color: rgba(10, 10, 10, 0.95) !important;
-    backdrop-filter: blur(16px);
-    border-bottom: 1px solid rgba(139, 148, 158, 0.2) !important;
+    backdrop-filter: blur(24px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
     box-shadow: 0 4px 30px rgba(0,0,0,0.7) !important;
 }
 
 .q-drawer {
     background: linear-gradient(180deg, #0D0D0D 0%, #050505 100%) !important;
-    background-image: radial-gradient(at 0% 100%, rgba(120, 135, 195, 0.12) 0%, transparent 70%) !important;
-    border-right: 2px solid var(--border-brutal) !important;
+    background-image: radial-gradient(at 0% 100%, rgba(126, 145, 194, 0.12) 0%, transparent 65%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-.brutal-card {
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    background: rgba(13, 13, 13, 0.8) !important;
-    backdrop-filter: blur(12px);
-    border-radius: 0px !important;
+.modern-card {
+    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) saturate(150%);
+    border-radius: 12px !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        var(--shadow-soft),
+        0 0 15px rgba(255, 255, 255, 0.05) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.brutal-toggle {
-    border: 1px solid var(--border-brutal) !important;
+.modern-card:hover {
+    transform: translateY(-1px) !important;
+    background: var(--glass-bg-hover) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        var(--shadow-hover),
+        0 0 20px rgba(255, 255, 255, 0.08) !important;
+}
+
+.modern-toggle {
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
     background: rgba(0, 0, 0, 0.4) !important;
-    border-radius: 4px;
+    border-radius: 8px;
     overflow: hidden;
+    backdrop-filter: blur(12px);
 }
 
-.brutal-toggle .q-btn {
+.modern-toggle .q-btn {
     border: 1px solid rgba(255, 255, 255, 0.05) !important;
     color: var(--text-muted) !important;
     font-weight: 600 !important;
     text-transform: uppercase;
     font-size: 0.75rem;
     padding: 0 16px !important;
+    border-radius: 0 !important;
 }
 
-.brutal-toggle .q-btn--active {
+.modern-toggle .q-btn--active {
     background: var(--q-primary) !important;
     color: white !important;
     border-color: var(--q-primary) !important;
 }
 
-.brutal-btn-teal, .q-btn.brutal-btn-teal {
-    border-color: rgba(15, 118, 110, 0.8) !important;
-    background: rgba(15, 118, 110, 0.45) !important;
+.modern-btn {
+    border-radius: 8px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    backdrop-filter: blur(12px) !important;
+    background: rgba(30, 30, 30, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.modern-btn:hover {
+    transform: scale(1.02) !important;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 15px var(--glow-blue) !important;
+    background: rgba(30, 30, 30, 0.6) !important;
+}
+
+.modern-btn-primary {
+    background: linear-gradient(180deg, rgba(15, 118, 110, 0.4) 0%, rgba(13, 100, 92, 0.3) 100%) !important;
+    border: 1px solid rgba(20, 184, 166, 0.4) !important;
+    border-radius: 8px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    backdrop-filter: blur(12px) !important;
+}
+
+.modern-btn-primary:hover {
+    transform: scale(1.02) !important;
+    background: linear-gradient(180deg, rgba(20, 184, 166, 0.5) 0%, rgba(13, 100, 92, 0.4) 100%) !important;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 20px var(--glow-blue) !important;
+}
+
+.modern-btn-secondary {
+    background: linear-gradient(180deg, rgba(67, 56, 202, 0.4) 0%, rgba(55, 48, 163, 0.3) 100%) !important;
+    border: 1px solid rgba(99, 102, 241, 0.4) !important;
+    border-radius: 8px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    backdrop-filter: blur(12px) !important;
+}
+
+.modern-btn-secondary:hover {
+    transform: scale(1.02) !important;
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.5) 0%, rgba(55, 48, 163, 0.4) 100%) !important;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 20px var(--glow-purple) !important;
+}
+
+/* Override Quasar button colors with glassmorphism */
+.q-btn, .q-btn--flat, .q-btn--outline,
+.q-btn.bg-deep-purple, .q-btn.text-deep-purple,
+.q-btn.bg-primary, .q-btn.text-primary,
+.q-btn.bg-positive, .q-btn.text-positive,
+.q-btn.bg-teal, .q-btn.text-teal,
+.q-btn--standard {
+    background: rgba(30, 30, 30, 0.5) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.q-btn:hover, .q-btn--flat:hover, .q-btn--outline:hover,
+.q-btn.bg-deep-purple:hover, .q-btn.text-deep-purple:hover,
+.q-btn.bg-primary:hover, .q-btn.text-primary:hover,
+.q-btn.bg-positive:hover, .q-btn.text-positive:hover,
+.q-btn.bg-teal:hover, .q-btn.text-teal:hover,
+.q-btn--standard:hover {
+    background: rgba(30, 30, 30, 0.6) !important;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 15px var(--glow-blue) !important;
+}
+
+/* Glassmorphism for separators and dividers */
+.q-separator, .q-divider {
+    background: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Upload component styling */
+.q-uploader, .q-uploader__header {
+    background: rgba(30, 30, 30, 0.4) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.05) !important;
+}
+
+.q-uploader:hover, .q-uploader__header:hover {
+    background: rgba(30, 30, 30, 0.5) !important;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.08) !important;
+}
+
+.nav-item {
+    position: relative;
+    padding-left: 16px;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.01) !important;
+}
+
+.nav-item.active {
+    color: #60A5FA !important;
+    background: rgba(37, 99, 235, 0.1) !important;
+}
+
+.nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 12px;
+    bottom: 12px;
+    width: 2px;
+    background: linear-gradient(180deg, #60A5FA 0%, #3B82F6 100%);
+    border-radius: 1px;
 }
 
 .q-notification--positive {
-    background: #064E3B !important; /* Brighter Emerald */
+    background: #064E3B !important;
     color: #d1fae5 !important;
     border: 1px solid #059669 !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(12px);
 }
 """
 
@@ -173,18 +317,20 @@ def index():
 
     # Framework colors: Brighter Blue (#2563EB) and Brighter Green (#064E3B)
     ui.colors(primary='#2563EB', secondary='#2563EB', accent='#831843', positive='#064E3B')
-    ui.add_head_html(f"<style>{AURORA_CSS}</style>")
+    ui.add_head_html(f"<style>{MODERN_CSS}</style>")
+    # Add Material Symbols Outlined font for thin-stroke icons
+    ui.add_head_html('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0" />')
 
     dark = ui.dark_mode(True)
 
     # ── header ────────────────────────────────────────────────────────────
-    with ui.header().classes("items-center justify-between px-6 py-2 brutal-header"):
+    with ui.header().classes("items-center justify-between px-6 py-2 modern-header"):
         with ui.row().classes("items-center gap-3"):
             ui.label("MyPySkinDose").classes("text-h6 font-bold text-white")
             ui.label(f"v{GUI_VERSION}").style("color: #F8FAFC; font-weight: bold; font-size: 10px; opacity: 0.3; margin-top: 4px;")
         
         with ui.row().classes("items-center gap-6"):
-            ui.button(icon="menu", on_click=lambda: left_drawer.toggle()).props("flat round color=white")
+            ui.button(icon="menu", on_click=lambda: left_drawer.toggle()).props("flat round color=white").classes("icon-outlined")
 
     # ── left drawer ───────────────────────────────────────────────────────
     with ui.left_drawer(fixed=True).classes("q-pa-md") as left_drawer:
@@ -201,9 +347,23 @@ def index():
         def go(name: str):
             tabs.set_value(name)
             state.active_tab = name
+            # Update navigation button classes
+            _update_nav_classes()
+
+        def _update_nav_classes():
+            """Update navigation button active states."""
+            for btn, target in nav_buttons:
+                if state.active_tab == target:
+                    btn.classes(add="active", remove="text-grey-4")
+                else:
+                    btn.classes(remove="active", add="text-grey-4")
+
+        nav_buttons = []
 
         def nav_btn(label, target):
-            return ui.button(label, on_click=lambda: go(target)).props("flat align=left dense").classes("full-width text-left py-0.5 text-grey-4 hover:text-white")
+            btn = ui.button(label, on_click=lambda: go(target)).props("flat align=left dense no-caps").classes("nav-item full-width text-left py-2 text-grey-4")
+            nav_buttons.append((btn, target))
+            return btn
 
         nav_btn("1 · Upload", "upload")
         nav_btn("2 · Data Table", "data")
@@ -214,7 +374,7 @@ def index():
         nav_btn("7 · Export", "export")
 
         ui.separator().classes("q-my-md bg-zinc-800")
-        run_btn_drawer = ui.button("Run Calculation", icon="play_arrow").classes("full-width brutal-btn")
+        run_btn_drawer = ui.button("Run Calculation", icon="play_arrow").classes("full-width modern-btn icon-outlined")
 
     # ── main tabs ─────────────────────────────────────────────────────────
     with ui.tabs().classes("w-full").on("update:model-value", lambda e: setattr(state, "active_tab", e.args)) as tabs:
@@ -236,16 +396,16 @@ def index():
                 ui.label("Load RDSR File").classes("text-2xl font-bold tracking-tight")
 
                 # Normalization warning banner
-                with ui.card().classes("brutal-card w-full border-red-900 bg-red-950/20").bind_visibility_from(
+                with ui.card().classes("modern-card w-full border-red-900 bg-red-950/20").bind_visibility_from(
                     state, "normalization_method", backward=lambda v: v == "Fallback"
                 ):
                     with ui.row().classes("items-center gap-3"):
-                        ui.icon("warning", color="negative").classes("text-xl")
+                        ui.icon("warning", color="negative").classes("text-xl icon-outlined")
                         ui.label().bind_text_from(
                             state, "normalization_warnings", backward=lambda ws: f"NORMALIZATION ALERT: {ws[0]}" if ws else ""
                         ).classes("mono-text text-xs font-bold text-red-400")
 
-                with ui.card().classes("brutal-card w-full"):
+                with ui.card().classes("modern-card w-full"):
                     ui.label("Upload RDSR file").classes("text-subtitle2 q-mb-xs")
                     ui.label("Select a local DICOM RDSR file from your computer.").classes("text-sm text-grey-4 q-mb-md")
 
@@ -274,7 +434,7 @@ def index():
                         'accept=".dcm" flat bordered color=deep-purple'
                     ).classes("w-full bg-black/40")
 
-                with ui.card().classes("brutal-card brutal-card-teal w-full"):
+                with ui.card().classes("modern-card modern-card-teal w-full"):
                     ui.label("Load example").classes("text-subtitle2 q-mb-xs")
                     
                     with ui.row().classes("w-full items-end gap-4"):
@@ -301,7 +461,7 @@ def index():
                             else:
                                 ui.notify(f"Parse error: {msg[:200]}", type="negative", timeout=8000)
 
-                        ui.button("LOAD", on_click=load_example).classes("brutal-btn brutal-btn-teal px-8")
+                        ui.button("LOAD", on_click=load_example).classes("modern-btn modern-btn-teal px-8")
 
                 # event summary table
                 ui.label("Irradiation events").classes("text-subtitle2 q-mt-md q-mb-xs")
@@ -315,7 +475,7 @@ def index():
                     ],
                     rows=[],
                     row_key="idx",
-                ).classes("w-full brutal-card mono-text")
+                ).classes("w-full modern-card mono-text")
 
             def _refresh_event_table():
                 if state.rdsr_df is None:
@@ -346,12 +506,12 @@ def index():
                         view_toggle = ui.toggle(
                             {"norm": "NORMALIZED", "raw": "RAW (UN-NORMALIZED)"},
                             value="norm"
-                        ).bind_value_to(state, "view_raw", forward=lambda v: v == "raw").classes("brutal-toggle")
+                        ).bind_value_to(state, "view_raw", forward=lambda v: v == "raw").classes("modern-toggle")
                     
                     with ui.row().classes("w-full items-center gap-3"):
-                        ui.button("EXPORT CSV", icon="description", on_click=lambda: _local_export("csv")).classes("brutal-btn h-10")
-                        ui.button("EXPORT XLSX", icon="table_view", on_click=lambda: _local_export("xlsx")).classes("brutal-btn h-10")
-                        ui.button("EXPORT TXT", icon="text_snippet", on_click=lambda: _local_export("txt")).classes("brutal-btn h-10")
+                        ui.button("EXPORT CSV", icon="description", on_click=lambda: _local_export("csv")).classes("modern-btn h-10 icon-outlined")
+                        ui.button("EXPORT XLSX", icon="table_view", on_click=lambda: _local_export("xlsx")).classes("modern-btn h-10 icon-outlined")
+                        ui.button("EXPORT TXT", icon="text_snippet", on_click=lambda: _local_export("txt")).classes("modern-btn h-10 icon-outlined")
 
                 def _local_export(fmt: str):
                     df = state.rdsr_raw_df if state.view_raw else state.rdsr_df
@@ -409,7 +569,7 @@ def index():
                         ui.download(output.getvalue(), default_name)
                     ui.notify(f"Downloaded {fmt.upper()}", color="positive")
                 
-                with ui.card().classes("brutal-card w-full p-0 overflow-hidden sticky-header"):
+                with ui.card().classes("modern-card w-full p-0 overflow-hidden sticky-header"):
                     raw_data_table = ui.table(
                         columns=[],
                         rows=[],
@@ -442,7 +602,7 @@ def index():
             with ui.column().classes("max-w-4xl mx-auto w-full gap-6"):
                 ui.label("Calculation Settings").classes("text-2xl font-bold tracking-tight")
 
-                with ui.expansion("Phantom Settings", icon="person", value=True).classes("brutal-card w-full"):
+                with ui.expansion("Phantom Settings", icon="person", value=True).classes("modern-card w-full"):
                     with ui.column().classes("w-full gap-4 q-pa-md"):
                         with ui.row().classes("w-full gap-6"):
                             ui.select(PHANTOM_MODELS, label="Phantom model", value=state.phantom_model).bind_value(
@@ -475,7 +635,7 @@ def index():
                                 state, "d_lat"
                             ).on("update:model-value", reset_results).classes("grow")
 
-                with ui.expansion("Physics Settings", icon="science").classes("brutal-card w-full"):
+                with ui.expansion("Physics Settings", icon="science").classes("modern-card w-full"):
                     with ui.column().classes("w-full gap-4 q-pa-md"):
                         ui.checkbox("Use estimated table transmission (k_tab)", value=state.estimate_k_tab).bind_value(
                             state, "estimate_k_tab"
@@ -497,7 +657,7 @@ def index():
                             state, "remove_invalid_rows"
                         ).on("update:model-value", reset_results)
 
-                with ui.expansion("Visual Settings", icon="palette").classes("brutal-card w-full"):
+                with ui.expansion("Visual Settings", icon="palette").classes("modern-card w-full"):
                     with ui.column().classes("w-full gap-4 q-pa-md"):
                         ui.checkbox("Auto-render dose map on completion", value=state.plot_dosemap).bind_value(
                             state, "plot_dosemap"
@@ -515,20 +675,20 @@ def index():
                 
                 # controls in a row above the plot
                 with ui.row().classes("w-full items-end gap-4"):
-                    with ui.card().classes("brutal-card w-48 p-2"):
+                    with ui.card().classes("modern-card w-48 p-2"):
                         ui.label("Event selection").classes("text-xs uppercase opacity-70")
                         geom_event_input = ui.number(
                             value=0, min=0, step=1
                         ).classes("w-full mono-text").props("dense flat")
                     
-                    ui.button("Setup view", on_click=lambda: preview_setup()).classes("brutal-btn-teal h-12 px-6")
-                    ui.button("Single event", on_click=lambda: preview_event()).classes("brutal-btn-teal h-12 px-6")
-                    ui.button("Full procedure", on_click=lambda: preview_procedure()).classes("brutal-btn-teal h-12 px-6")
+                    ui.button("Setup view", on_click=lambda: preview_setup()).classes("modern-btn-teal h-12 px-6")
+                    ui.button("Single event", on_click=lambda: preview_event()).classes("modern-btn-teal h-12 px-6")
+                    ui.button("Full procedure", on_click=lambda: preview_procedure()).classes("modern-btn-teal h-12 px-6")
                     
                     geom_spinner = ui.spinner(size="lg", color="indigo").classes("ml-4")
                     geom_spinner.visible = False
 
-                with ui.card().classes("w-full brutal-card p-0 overflow-hidden"):
+                with ui.card().classes("w-full modern-card p-0 overflow-hidden"):
                     geom_plot = ui.plotly({}).classes("w-full").style("height:700px")
 
                 async def preview_setup():
@@ -569,7 +729,7 @@ def index():
                 ui.label("Run Dose Calculation").classes("text-2xl font-bold tracking-tight")
 
                 # settings summary card
-                with ui.card().classes("brutal-card w-full border border-blue-100 shadow-sm"):
+                with ui.card().classes("modern-card w-full border border-blue-100 shadow-sm"):
                     ui.label("Current settings").classes("text-xl font-bold q-mb-md")
 
                     with ui.grid(columns=3).classes("w-full gap-8 mono-text text-sm"):
@@ -623,7 +783,7 @@ def index():
 
                 with ui.column().classes("w-full items-center gap-4 q-mt-xl"):
                     calc_btn = ui.button("▶  Run Calculation", on_click=lambda: do_calculate(), icon="bolt").classes(
-                        "brutal-btn brutal-btn-teal text-xl px-12 py-4"
+                        "modern-btn modern-btn-teal text-xl px-12 py-4 icon-outlined"
                     )
                     run_btn_drawer.on("click", lambda: do_calculate())
 
@@ -670,15 +830,15 @@ def index():
 
                 # metric cards
                 with ui.row().classes("w-full gap-6"):
-                    with ui.card().classes("brutal-card grow q-pa-lg text-center"):
+                    with ui.card().classes("modern-card grow q-pa-lg text-center"):
                         ui.label("Peak Skin Dose").classes("text-caption text-grey-6")
                         psd_metric = ui.label("—").classes("text-4xl text-aurora-purple font-bold")
 
-                    with ui.card().classes("brutal-card grow q-pa-lg text-center"):
+                    with ui.card().classes("modern-card grow q-pa-lg text-center"):
                         ui.label("Total Air Kerma").classes("text-caption text-grey-6")
                         kerma_metric = ui.label("—").classes("text-4xl text-white font-bold")
 
-                    with ui.card().classes("brutal-card grow q-pa-lg text-center"):
+                    with ui.card().classes("modern-card grow q-pa-lg text-center"):
                         ui.label("Events").classes("text-caption text-grey-6")
                         events_metric = ui.label("—").classes("text-4xl text-aurora-teal font-bold")
 
@@ -692,20 +852,20 @@ def index():
 
             with ui.row().classes("w-full gap-6"):
                 # dose map plot
-                with ui.card().classes("grow brutal-card p-0 overflow-hidden relative"):
+                with ui.card().classes("grow modern-card p-0 overflow-hidden relative"):
                     dosemap_plot = ui.plotly({}).classes("w-full").style("height:700px")
                     dosemap_spinner = ui.spinner(size="lg", color="indigo").classes("absolute-center")
                     dosemap_spinner.visible = False
 
                 # Controls & Correction factors
                 with ui.column().classes("w-80 gap-6"):
-                    with ui.card().classes("brutal-card w-full"):
+                    with ui.card().classes("modern-card w-full"):
                         ui.label("Visual settings").classes("text-subtitle2 q-mb-sm")
                         ui.select(COLORSCALES, label="Colorscale", value=state.colorscale).bind_value(state, "colorscale").on(
                             "update:model-value", lambda: _refresh_dosemap()
                         ).classes("w-full")
                         
-                        ui.button("REGENERATE PLOT", on_click=lambda: _refresh_dosemap()).classes("full-width brutal-btn brutal-btn-teal q-mt-md")
+                        ui.button("REGENERATE PLOT", on_click=lambda: _refresh_dosemap()).classes("full-width modern-btn modern-btn-teal q-mt-md")
 
                     ui.label("Correction factors per event").classes("text-caption text-grey-6")
                     corr_table = ui.table(
@@ -717,7 +877,7 @@ def index():
                         ],
                         rows=[],
                         row_key="event",
-                    ).classes("w-full brutal-card")
+                    ).classes("w-full modern-card")
 
             def _refresh_dosemap():
                 if not state.calculation_done:
@@ -774,20 +934,20 @@ def index():
                 ).classes("text-caption text-grey-6 q-mb-md").bind_visibility_from(state, "calculation_done", backward=lambda v: not v)
 
                 with ui.grid(columns=2).classes("w-full gap-6"):
-                    with ui.card().classes("brutal-card"):
+                    with ui.card().classes("modern-card"):
                         ui.label("JSON — full results dict").classes("text-subtitle2 q-mb-sm")
                         ui.label("Full results dictionary containing all data.").classes("text-xs text-grey-5 q-mb-md")
-                        ui.button("Download JSON", icon="download", on_click=lambda: download_json()).classes("full-width brutal-btn")
+                        ui.button("Download JSON", icon="download", on_click=lambda: download_json()).classes("full-width modern-btn icon-outlined")
 
-                    with ui.card().classes("brutal-card brutal-card-teal"):
+                    with ui.card().classes("modern-card modern-card-teal"):
                         ui.label("Interactive HTML dose map").classes("text-subtitle2 q-mb-sm")
                         ui.label("Standalone HTML file with interactive 3D map.").classes("text-xs text-grey-5 q-mb-md")
-                        ui.button("Download HTML", icon="html", on_click=lambda: download_html()).classes("full-width brutal-btn")
+                        ui.button("Download HTML", icon="html", on_click=lambda: download_html()).classes("full-width modern-btn icon-outlined")
 
-                    with ui.card().classes("brutal-card"):
+                    with ui.card().classes("modern-card"):
                         ui.label("PNG dose map").classes("text-subtitle2 q-mb-sm")
                         ui.label("Static capture of the current dose map view.").classes("text-xs text-grey-5 q-mb-md")
-                        ui.button("Download PNG", icon="image", on_click=lambda: download_png()).classes("full-width brutal-btn")
+                        ui.button("Download PNG", icon="image", on_click=lambda: download_png()).classes("full-width modern-btn icon-outlined")
 
                 def download_json():
                     if not state.calculation_done or state.output is None:
@@ -1012,6 +1172,10 @@ def run_gui(native: bool = False) -> None:
                     # ui.timer(2.0, lambda: app.native.main_window.set_on_top(False), once=True)
             except Exception:
                 pass
+
+    # Suppress JavaScript timeout errors during shutdown
+    import logging
+    logging.getLogger('nicegui').setLevel(logging.ERROR)
 
     ui.run(
         title="MyPySkinDose",

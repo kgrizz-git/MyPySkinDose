@@ -37,5 +37,3 @@ if %ERRORLEVEL% NEQ 0 (
     echo Ensure you have installed the dependencies: pip install .[gui]
     pause
 )
-
-pause

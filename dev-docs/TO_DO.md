@@ -35,3 +35,5 @@
 - reduce spacing/padding around text elements in navigation section of left pane
 - soften brutalist look? and make more sleek/modern
 * refactor app.py
+- change fonts?
+* add a light mode
