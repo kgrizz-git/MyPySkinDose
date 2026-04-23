@@ -34,144 +34,272 @@ COLORSCALES = ["jet", "viridis", "plasma", "inferno", "magma", "turbo", "hot"]
 PHANTOM_MODELS = ["human", "cylinder", "plane"]
 ORIENTATIONS = ["head_first_supine", "feet_first_supine"]
 
+# ── aurora-brutalist design ──────────────────────────────────────────────────
+AURORA_CSS = """
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+    --bg-primary: #050505;
+    --bg-secondary: #0D0D0D;
+    --aurora-purple: #A855F7;
+    --aurora-teal: #2DD4BF;
+    --aurora-pink: #EC4899;
+    --text-main: #F8FAFC;
+    --border-brutal: #262626;
+    
+    /* Quasar overrides */
+    --q-primary: var(--aurora-purple) !important;
+}
+
+body {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-main) !important;
+    font-family: 'Inter', sans-serif;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(168, 85, 247, 0.25) 0px, transparent 60%),
+        radial-gradient(at 100% 100%, rgba(45, 212, 191, 0.15) 0px, transparent 60%),
+        radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.05) 0px, transparent 40%) !important;
+    background-attachment: fixed;
+}
+
+.nicegui-content {
+    background: transparent !important;
+}
+
+.brutal-card {
+    border: 1px solid var(--border-brutal) !important;
+    background: rgba(13, 13, 13, 0.7) !important;
+    backdrop-filter: blur(12px);
+    box-shadow: 2px 2px 0px var(--aurora-purple) !important;
+    border-radius: 0px !important;
+}
+
+.brutal-card-teal {
+    box-shadow: 2px 2px 0px var(--aurora-teal) !important;
+}
+
+.brutal-btn {
+    border-radius: 0px !important;
+    border: 1px solid var(--aurora-purple) !important;
+    text-transform: none !important;
+    font-weight: 700 !important;
+    transition: all 150ms ease-out !important;
+    background: transparent !important;
+}
+
+.brutal-btn:hover {
+    background: var(--aurora-purple) !important;
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4) !important;
+    color: white !important;
+}
+
+.brutal-btn-teal {
+    border-color: var(--aurora-teal) !important;
+}
+
+.brutal-btn-teal:hover {
+    background: var(--aurora-teal) !important;
+    box-shadow: 0 0 20px rgba(45, 212, 191, 0.4) !important;
+}
+
+.mono-text {
+    font-family: 'JetBrains Mono', monospace !important;
+}
+
+.technical-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    font-weight: 700;
+}
+
+.q-header {
+    background-color: rgba(13, 13, 13, 0.9) !important;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--aurora-purple) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+}
+
+.q-drawer {
+    background: linear-gradient(180deg, #0D0D0D 0%, #050505 100%) !important;
+    background-image: radial-gradient(at 0% 100%, rgba(168, 85, 247, 0.1) 0px, transparent 70%) !important;
+    border-right: 1px solid var(--border-brutal) !important;
+}
+
+.q-tab {
+    font-weight: 700 !important;
+    letter-spacing: -0.02em;
+}
+
+.q-tab--active {
+    color: var(--aurora-purple) !important;
+}
+
+/* Customizing NiceGUI/Quasar tables to be brutalist */
+.q-table__card {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: 1px solid var(--border-brutal) !important;
+}
+
+.q-table th {
+    font-weight: 700 !important;
+    color: var(--aurora-teal) !important;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+}
+
+.q-table td {
+    border-bottom: 1px solid var(--border-brutal) !important;
+}
+"""
+
 
 # ── page ───────────────────────────────────────────────────────────────────
 @ui.page("/")
 def index():
     dprint("GUI", "Rendering index page (client connected or reloaded)")
-    dark = ui.dark_mode(state.dark_mode)
+    ui.add_head_html(f"<style>{AURORA_CSS}</style>")
+
+    dark = ui.dark_mode(True)  # Force dark mode for the aurora vibe
 
     # ── header ────────────────────────────────────────────────────────────
-    with ui.header(elevated=True).classes("items-center justify-between px-4"):
-        ui.label("MyPySkinDose").classes("text-h6 font-bold")
-        with ui.row().classes("items-center gap-2"):
-            ui.label("Dark mode")
-            ui.switch(value=state.dark_mode).bind_value(state, "dark_mode").on(
-                "update:model-value", lambda: dark.set_value(state.dark_mode)
-            )
+    with ui.header().classes("items-center justify-between px-6 py-2"):
+        with ui.row().classes("items-center gap-3"):
+            ui.label("MyPySkinDose").classes("text-h6 font-bold")
+        
+        with ui.row().classes("items-center gap-6"):
+            ui.button(icon="menu", on_click=lambda: left_drawer.toggle()).props("flat round color=white")
 
     # ── left drawer ───────────────────────────────────────────────────────
-    with ui.left_drawer(fixed=True).classes("bg-grey-9 q-pa-md").style("width:220px"):
-        ui.label("Status").classes("text-subtitle2 text-grey-4 q-mb-xs")
+    with ui.left_drawer(fixed=True).classes("q-pa-md") as left_drawer:
+        ui.label("Status").classes("text-caption text-grey-6 q-mb-xs")
 
-        file_label = ui.label("No file loaded").classes("text-caption text-grey-5")
-        events_label = ui.label("").classes("text-caption text-grey-5")
-        psd_label = ui.label("").classes("text-caption text-positive text-bold")
+        with ui.column().classes("gap-1 q-mb-md"):
+            file_label = ui.label("No file loaded").classes("text-caption")
+            events_label = ui.label("0 events").classes("text-caption")
+            psd_label = ui.label("PSD: 0.00 mGy").classes("text-subtitle2 text-aurora-purple font-bold")
 
-        ui.separator().classes("q-my-sm")
-        ui.label("Navigation").classes("text-subtitle2 text-grey-4 q-mb-xs")
+        ui.separator().classes("q-my-md bg-zinc-800")
+        ui.label("Navigation").classes("text-caption text-grey-6 q-mb-xs")
 
         def go(name: str):
             tabs.set_value(name)
             state.active_tab = name
 
-        ui.button("1 · Upload", on_click=lambda: go("upload")).props("flat align=left").classes("full-width text-left")
-        ui.button("2 · Geometry", on_click=lambda: go("geometry")).props("flat align=left").classes("full-width")
-        ui.button("3 · Settings", on_click=lambda: go("settings")).props("flat align=left").classes("full-width")
-        ui.button("4 · Calculate", on_click=lambda: go("calculate")).props("flat align=left").classes("full-width")
-        ui.button("5 · Results", on_click=lambda: go("results")).props("flat align=left").classes("full-width")
-        ui.button("6 · Export", on_click=lambda: go("export")).props("flat align=left").classes("full-width")
+        def nav_btn(label, target):
+            return ui.button(label, on_click=lambda: go(target)).props("flat align=left").classes("full-width text-left py-1")
 
-        ui.separator().classes("q-my-sm")
-        run_btn_drawer = ui.button("▶  Run Calculation", color="positive").classes("full-width")
+        nav_btn("1 · Upload", "upload")
+        nav_btn("2 · Settings", "settings")
+        nav_btn("3 · Geometry", "geometry")
+        nav_btn("4 · Calculate", "calculate")
+        nav_btn("5 · Results", "results")
+        nav_btn("6 · Export", "export")
+
+        ui.separator().classes("q-my-md bg-zinc-800")
+        run_btn_drawer = ui.button("▶  Run Calculation", icon="play_arrow").classes("full-width brutal-btn")
 
     # ── main tabs ─────────────────────────────────────────────────────────
     with ui.tabs().classes("w-full").on("update:model-value", lambda e: setattr(state, "active_tab", e.args)) as tabs:
-        t_upload = ui.tab("upload", label="1 · Upload")
-        t_geometry = ui.tab("geometry", label="2 · Geometry")
-        t_settings = ui.tab("settings", label="3 · Settings")
-        t_calculate = ui.tab("calculate", label="4 · Calculate")
-        t_results = ui.tab("results", label="5 · Results")
-        t_export = ui.tab("export", label="6 · Export")
+        ui.tab("upload", label="1 · Upload")
+        ui.tab("settings", label="2 · Settings")
+        ui.tab("geometry", label="3 · Geometry")
+        ui.tab("calculate", label="4 · Calculate")
+        ui.tab("results", label="5 · Results")
+        ui.tab("export", label="6 · Export")
 
-    with ui.tab_panels(tabs, value="upload").classes("w-full"):
+    with ui.tab_panels(tabs, value="upload").classes("w-full bg-transparent"):
 
         # ══════════════════════════════════════════════════════════════════
         # TAB 1 — UPLOAD
         # ══════════════════════════════════════════════════════════════════
         with ui.tab_panel("upload"):
-            with ui.row().classes("w-full items-center justify-between"):
-                ui.label("Load RDSR File").classes("text-h6")
+            with ui.column().classes("max-w-4xl mx-auto w-full gap-6"):
+                ui.label("Load RDSR File").classes("text-2xl font-bold tracking-tight")
 
-            # Normalization warning banner (using card for compatibility)
-            with ui.card().classes("bg-warning text-white w-full q-pa-sm q-mb-md").bind_visibility_from(
-                state, "normalization_method", backward=lambda v: v == "Fallback"
-            ):
-                with ui.row().classes("items-center gap-2"):
-                    ui.icon("warning", size="sm")
-                    ui.label().bind_text_from(
-                        state, "normalization_warnings", backward=lambda ws: ws[0] if ws else ""
-                    )
+                # Normalization warning banner
+                with ui.card().classes("brutal-card w-full border-red-900 bg-red-950/20").bind_visibility_from(
+                    state, "normalization_method", backward=lambda v: v == "Fallback"
+                ):
+                    with ui.row().classes("items-center gap-3"):
+                        ui.icon("warning", color="negative").classes("text-xl")
+                        ui.label().bind_text_from(
+                            state, "normalization_warnings", backward=lambda ws: f"NORMALIZATION ALERT: {ws[0]}" if ws else ""
+                        ).classes("mono-text text-xs font-bold text-red-400")
 
-            with ui.card().classes("w-full q-mb-md"):
-                ui.label("Upload a DICOM RDSR (.dcm) file").classes("text-subtitle2 q-mb-sm")
+                with ui.card().classes("brutal-card w-full"):
+                    ui.label("Upload RDSR file").classes("text-subtitle2 q-mb-xs")
+                    ui.label("Select a local DICOM RDSR file from your computer.").classes("text-sm text-grey-4 q-mb-md")
 
-                upload_status = ui.label("").classes("text-caption")
+                    upload_status = ui.label("Waiting for file...").classes("text-caption text-grey-5 q-mb-sm")
 
-                async def handle_upload(e):
-                    dprint("GUI", f"Uploading file {e.name}")
-                    with tempfile.NamedTemporaryFile(suffix=".dcm", delete=False) as tmp:
-                        tmp.write(e.content.read())
-                        tmp_path = Path(tmp.name)
-                    upload_status.set_text("Parsing…")
-                    ok, msg = await run.io_bound(load_rdsr, tmp_path, state)
-                    if ok:
-                        state.file_name = e.name
-                        file_label.set_text(f"📁 {e.name}")
-                        events_label.set_text(f"📊 {len(state.rdsr_df)} events")
-                        upload_status.set_text(msg)
-                        ui.notify(msg, type="positive")
-                        reset_results()
-                        _refresh_event_table()
-                    else:
-                        upload_status.set_text("Error — see notification")
-                        ui.notify(f"Parse error: {msg[:200]}", type="negative", timeout=8000)
+                    async def handle_upload(e):
+                        dprint("GUI", f"Uploading file {e.name}")
+                        with tempfile.NamedTemporaryFile(suffix=".dcm", delete=False) as tmp:
+                            tmp.write(e.content.read())
+                            tmp_path = Path(tmp.name)
+                        upload_status.set_text("PARSING DATA STREAM...")
+                        ok, msg = await run.io_bound(load_rdsr, tmp_path, state)
+                        if ok:
+                            state.file_name = e.name
+                            file_label.set_text(e.name.upper())
+                            events_label.set_text(f"{len(state.rdsr_df)} EVENTS")
+                            upload_status.set_text(f"SUCCESS: {msg.upper()}")
+                            ui.notify(msg, color="positive")
+                            reset_results()
+                            _refresh_event_table()
+                        else:
+                            upload_status.set_text("STREAM ERROR")
+                            ui.notify(f"Parse error: {msg[:200]}", type="negative", timeout=8000)
 
-                ui.upload(on_upload=handle_upload, label="Drop .dcm here or click").props(
-                    'accept=".dcm" flat bordered'
-                ).classes("w-full")
+                    ui.upload(on_upload=handle_upload, label="DRAG AND DROP RDSR").props(
+                        'accept=".dcm" flat bordered color=purple'
+                    ).classes("w-full bg-black/40")
 
-            with ui.card().classes("w-full q-mb-md"):
-                ui.label("Or use a bundled example file").classes("text-subtitle2 q-mb-sm")
+                with ui.card().classes("brutal-card brutal-card-teal w-full"):
+                    ui.label("Load example").classes("text-subtitle2 q-mb-xs")
+                    
+                    with ui.row().classes("w-full items-end gap-4"):
+                        example_select = ui.select(
+                            options=list(EXAMPLE_FILES.keys()),
+                            label="Available Examples",
+                            value=list(EXAMPLE_FILES.keys())[0] if EXAMPLE_FILES else None,
+                        ).classes("grow")
 
-                example_select = ui.select(
-                    options=list(EXAMPLE_FILES.keys()),
-                    label="Example RDSR file",
-                    value=list(EXAMPLE_FILES.keys())[0] if EXAMPLE_FILES else None,
-                ).classes("w-full")
+                        async def load_example():
+                            name = example_select.value
+                            if not name:
+                                return
+                            path = EXAMPLE_FILES[name]
+                            upload_status.set_text("PARSING EXAMPLE STREAM...")
+                            ok, msg = await run.io_bound(load_rdsr, path, state)
+                            if ok:
+                                file_label.set_text(name.upper())
+                                events_label.set_text(f"{len(state.rdsr_df)} EVENTS")
+                                upload_status.set_text(f"SUCCESS: {msg.upper()}")
+                                ui.notify(msg, color="positive")
+                                reset_results()
+                                _refresh_event_table()
+                            else:
+                                ui.notify(f"Parse error: {msg[:200]}", type="negative", timeout=8000)
 
-                async def load_example():
-                    name = example_select.value
-                    if not name:
-                        return
-                    path = EXAMPLE_FILES[name]
-                    upload_status.set_text("Parsing…")
-                    ok, msg = await run.io_bound(load_rdsr, path, state)
-                    if ok:
-                        file_label.set_text(f"📁 {name}")
-                        events_label.set_text(f"📊 {len(state.rdsr_df)} events")
-                        upload_status.set_text(msg)
-                        ui.notify(msg, type="positive")
-                        reset_results()
-                        _refresh_event_table()
-                    else:
-                        ui.notify(f"Parse error: {msg[:200]}", type="negative", timeout=8000)
+                        ui.button("LOAD", on_click=load_example).classes("brutal-btn brutal-btn-teal px-8")
 
-                ui.button("Load example", on_click=load_example).props("outline")
-
-            # event summary table
-            ui.label("Irradiation events").classes("text-subtitle2 q-mt-md q-mb-xs")
-            event_table = ui.table(
-                columns=[
-                    {"name": "idx", "label": "#", "field": "idx", "align": "right"},
-                    {"name": "kVp", "label": "kVp", "field": "kVp", "align": "right"},
-                    {"name": "Ap1", "label": "Ap1 (°)", "field": "Ap1", "align": "right"},
-                    {"name": "Ap2", "label": "Ap2 (°)", "field": "Ap2", "align": "right"},
-                    {"name": "K_IRP", "label": "K_IRP (mGy)", "field": "K_IRP", "align": "right"},
-                ],
-                rows=[],
-                row_key="idx",
-            ).classes("w-full")
+                # event summary table
+                ui.label("Irradiation events").classes("text-subtitle2 q-mt-md q-mb-xs")
+                event_table = ui.table(
+                    columns=[
+                        {"name": "idx", "label": "#", "field": "idx", "align": "right"},
+                        {"name": "kVp", "label": "kVp", "field": "kVp", "align": "right"},
+                        {"name": "Ap1", "label": "Ap1 (°)", "field": "Ap1", "align": "right"},
+                        {"name": "Ap2", "label": "Ap2 (°)", "field": "Ap2", "align": "right"},
+                        {"name": "K_IRP", "label": "K_IRP (mGy)", "field": "K_IRP", "align": "right"},
+                    ],
+                    rows=[],
+                    row_key="idx",
+                ).classes("w-full brutal-card mono-text")
 
             def _refresh_event_table():
                 if state.rdsr_df is None:
@@ -190,195 +318,191 @@ def index():
                 event_table.update()
 
         # ══════════════════════════════════════════════════════════════════
-        # TAB 2 — GEOMETRY PREVIEW
+        # TAB 2 — SETTINGS (moved to pos 2)
+        # ══════════════════════════════════════════════════════════════════
+        with ui.tab_panel("settings"):
+            with ui.column().classes("max-w-4xl mx-auto w-full gap-6"):
+                ui.label("Calculation Settings").classes("text-2xl font-bold tracking-tight")
+
+                with ui.expansion("Phantom Settings", icon="person", value=True).classes("brutal-card w-full"):
+                    with ui.column().classes("w-full gap-4 q-pa-md"):
+                        with ui.row().classes("w-full gap-6"):
+                            ui.select(PHANTOM_MODELS, label="Phantom model", value=state.phantom_model).bind_value(
+                                state, "phantom_model"
+                            ).on("update:model-value", reset_results).classes("grow")
+
+                            mesh_select = ui.select(
+                                HUMAN_MESHES, label="Human mesh", value=state.human_mesh
+                            ).bind_value(state, "human_mesh").on("update:model-value", reset_results).classes("grow")
+
+                        # show/hide mesh selector based on model
+                        def _update_mesh_visibility():
+                            mesh_select.visible = state.phantom_model == "human"
+
+                        ui.timer(0.5, _update_mesh_visibility)
+
+                        ui.select(ORIENTATIONS, label="Patient orientation", value=state.patient_orientation).bind_value(
+                            state, "patient_orientation"
+                        ).on("update:model-value", reset_results).classes("w-full")
+
+                        ui.label("Patient offset (cm)").classes("text-caption text-grey-6 q-mt-sm")
+                        with ui.row().classes("w-full gap-4"):
+                            ui.number(label="Longitudinal", value=state.d_lon, step=1.0).bind_value(
+                                state, "d_lon"
+                            ).on("update:model-value", reset_results).classes("grow")
+                            ui.number(label="Vertical", value=state.d_ver, step=1.0).bind_value(
+                                state, "d_ver"
+                            ).on("update:model-value", reset_results).classes("grow")
+                            ui.number(label="Lateral", value=state.d_lat, step=1.0).bind_value(
+                                state, "d_lat"
+                            ).on("update:model-value", reset_results).classes("grow")
+
+                with ui.expansion("Physics Settings", icon="science").classes("brutal-card w-full"):
+                    with ui.column().classes("w-full gap-4 q-pa-md"):
+                        ui.checkbox("Use estimated table transmission (k_tab)", value=state.estimate_k_tab).bind_value(
+                            state, "estimate_k_tab"
+                        ).on("update:model-value", reset_results)
+
+                        with ui.column().classes("w-full gap-1"):
+                            ui.label("TRANSMISSION FACTOR (k_tab)").classes("technical-label")
+                            with ui.row().classes("items-center w-full gap-4"):
+                                ui.slider(min=0.0, max=1.0, step=0.01, value=state.k_tab_val).bind_value(
+                                    state, "k_tab_val"
+                                ).on("update:model-value", reset_results).classes("grow")
+                                ui.label().bind_text_from(state, "k_tab_val", backward=lambda v: f"{v:.2f}").classes("mono-text font-bold")
+
+                        ui.number(
+                            label="Inherent filtration (mmAl)", value=state.inherent_filtration, min=0.0, step=0.1
+                        ).bind_value(state, "inherent_filtration").on("update:model-value", reset_results).classes("w-full")
+
+                        ui.checkbox("Remove invalid data (kVp = 0)", value=state.remove_invalid_rows).bind_value(
+                            state, "remove_invalid_rows"
+                        ).on("update:model-value", reset_results)
+
+                with ui.expansion("Visual Settings", icon="palette").classes("brutal-card w-full"):
+                    with ui.column().classes("w-full gap-4 q-pa-md"):
+                        ui.checkbox("Auto-render dose map on completion", value=state.plot_dosemap).bind_value(
+                            state, "plot_dosemap"
+                        )
+                        ui.select(COLORSCALES, label="Dose map colorscale", value=state.colorscale).bind_value(
+                            state, "colorscale"
+                        ).classes("w-full")
+
+        # ══════════════════════════════════════════════════════════════════
+        # TAB 3 — GEOMETRY PREVIEW (moved to pos 3)
         # ══════════════════════════════════════════════════════════════════
         with ui.tab_panel("geometry"):
-            ui.label("Geometry Preview").classes("text-h6 q-mb-md")
-            ui.label(
-                "Visualise phantom placement and beam geometry before running the full calculation."
-            ).classes("text-caption text-grey-6 q-mb-md")
+            with ui.column().classes("max-w-6xl mx-auto w-full gap-6"):
+                ui.label("Geometry Preview").classes("text-2xl font-bold tracking-tight")
+                
+                # controls in a row above the plot
+                with ui.row().classes("w-full items-end gap-4"):
+                    with ui.card().classes("brutal-card w-48 p-2"):
+                        ui.label("Event selection").classes("text-xs uppercase opacity-70")
+                        geom_event_input = ui.number(
+                            value=0, min=0, step=1
+                        ).classes("w-full mono-text").props("dense flat")
+                    
+                    ui.button("Setup view", on_click=lambda: preview_setup()).classes("brutal-btn-teal h-12 px-6")
+                    ui.button("Single event", on_click=lambda: preview_event()).classes("brutal-btn-teal h-12 px-6")
+                    ui.button("Full procedure", on_click=lambda: preview_procedure()).classes("brutal-btn-teal h-12 px-6")
+                    
+                    geom_spinner = ui.spinner(size="lg", color="purple").classes("ml-4")
+                    geom_spinner.visible = False
 
-            with ui.row().classes("gap-4 q-mb-md"):
-                geom_event_input = ui.number(
-                    label="Event index (0-based)", value=0, min=0, step=1
-                ).classes("w-40")
+                with ui.card().classes("w-full brutal-card p-0 overflow-hidden"):
+                    geom_plot = ui.plotly({}).classes("w-full").style("height:700px")
 
-            with ui.row().classes("gap-2 q-mb-md"):
                 async def preview_setup():
                     if state.rdsr_df is None:
-                        ui.notify("Load an RDSR file first", type="warning")
+                        ui.notify("Load data first", type="warning")
                         return
                     geom_spinner.visible = True
                     fig = await run.io_bound(_make_geometry_fig, "plot_setup", 0)
                     geom_spinner.visible = False
                     if fig:
                         geom_plot.update_figure(fig)
-                    else:
-                        ui.notify("Geometry preview failed — check console", type="negative")
 
                 async def preview_event():
                     if state.rdsr_df is None:
-                        ui.notify("Load an RDSR file first", type="warning")
+                        ui.notify("Load data first", type="warning")
                         return
                     geom_spinner.visible = True
                     fig = await run.io_bound(_make_geometry_fig, "plot_event", int(geom_event_input.value or 0))
                     geom_spinner.visible = False
                     if fig:
                         geom_plot.update_figure(fig)
-                    else:
-                        ui.notify("Geometry preview failed — check console", type="negative")
 
                 async def preview_procedure():
                     if state.rdsr_df is None:
-                        ui.notify("Load an RDSR file first", type="warning")
+                        ui.notify("Load data first", type="warning")
                         return
                     geom_spinner.visible = True
                     fig = await run.io_bound(_make_geometry_fig, "plot_procedure", 0)
                     geom_spinner.visible = False
                     if fig:
                         geom_plot.update_figure(fig)
-                    else:
-                        ui.notify("Geometry preview failed — check console", type="negative")
-
-                ui.button("Setup view", on_click=preview_setup).props("outline")
-                ui.button("Single event", on_click=preview_event).props("outline")
-                ui.button("Full procedure", on_click=preview_procedure).props("outline")
-
-            geom_spinner = ui.spinner(size="lg").classes("q-mb-sm")
-            geom_spinner.visible = False
-
-            geom_plot = ui.plotly({}).classes("w-full").style("height:600px")
-
-        # ══════════════════════════════════════════════════════════════════
-        # TAB 3 — SETTINGS
-        # ══════════════════════════════════════════════════════════════════
-        with ui.tab_panel("settings"):
-            ui.label("Calculation Settings").classes("text-h6 q-mb-md")
-
-            with ui.expansion("Phantom", icon="person", value=True).classes("w-full q-mb-sm"):
-                with ui.column().classes("w-full gap-2"):
-                    ui.select(PHANTOM_MODELS, label="Phantom model", value=state.phantom_model).bind_value(
-                        state, "phantom_model"
-                    ).on("update:model-value", reset_results).classes("w-full")
-
-                    mesh_select = ui.select(
-                        HUMAN_MESHES, label="Human mesh", value=state.human_mesh
-                    ).bind_value(state, "human_mesh").on("update:model-value", reset_results).classes("w-full")
-
-                    # show/hide mesh selector based on model
-                    def _update_mesh_visibility():
-                        mesh_select.visible = state.phantom_model == "human"
-
-                    ui.timer(0.5, _update_mesh_visibility)
-
-                    ui.select(ORIENTATIONS, label="Patient orientation", value=state.patient_orientation).bind_value(
-                        state, "patient_orientation"
-                    ).on("update:model-value", reset_results).classes("w-full")
-
-                    with ui.row().classes("gap-4"):
-                        ui.number(label="Offset d_lon (cm)", value=state.d_lon, step=1.0).bind_value(
-                            state, "d_lon"
-                        ).on("update:model-value", reset_results).classes("w-32")
-                        ui.number(label="Offset d_ver (cm)", value=state.d_ver, step=1.0).bind_value(
-                            state, "d_ver"
-                        ).on("update:model-value", reset_results).classes("w-32")
-                        ui.number(label="Offset d_lat (cm)", value=state.d_lat, step=1.0).bind_value(
-                            state, "d_lat"
-                        ).on("update:model-value", reset_results).classes("w-32")
-
-            with ui.expansion("Physics", icon="science").classes("w-full q-mb-sm"):
-                with ui.column().classes("w-full gap-3"):
-                    est_cb = ui.checkbox("Use estimated table transmission (k_tab)", value=state.estimate_k_tab).bind_value(
-                        state, "estimate_k_tab"
-                    ).on("update:model-value", reset_results)
-
-                    with ui.row().classes("items-center gap-4"):
-                        ui.label("k_tab value:").classes("text-caption")
-                        ui.slider(min=0.0, max=1.0, step=0.01, value=state.k_tab_val).bind_value(
-                            state, "k_tab_val"
-                        ).on("update:model-value", reset_results).classes("w-48")
-                        ktab_display = ui.label(f"{state.k_tab_val:.2f}").classes("text-caption w-10")
-                        ui.timer(0.3, lambda: ktab_display.set_text(f"{state.k_tab_val:.2f}"))
-
-                    ui.number(
-                        label="Inherent filtration (mmAl)", value=state.inherent_filtration, min=0.0, step=0.1
-                    ).bind_value(state, "inherent_filtration").on("update:model-value", reset_results).classes("w-56")
-
-                    ui.checkbox("Remove rows with kVp = 0", value=state.remove_invalid_rows).bind_value(
-                        state, "remove_invalid_rows"
-                    ).on("update:model-value", reset_results)
-
-            with ui.expansion("Display", icon="palette").classes("w-full q-mb-sm"):
-                with ui.column().classes("w-full gap-2"):
-                    ui.checkbox("Show dose map after calculation", value=state.plot_dosemap).bind_value(
-                        state, "plot_dosemap"
-                    )
-                    ui.select(COLORSCALES, label="Dose map colorscale", value=state.colorscale).bind_value(
-                        state, "colorscale"
-                    ).classes("w-48")
 
         # ══════════════════════════════════════════════════════════════════
         # TAB 4 — CALCULATE
         # ══════════════════════════════════════════════════════════════════
+        # ══════════════════════════════════════════════════════════════════
+        # TAB 4 — CALCULATE
+        # ══════════════════════════════════════════════════════════════════
         with ui.tab_panel("calculate"):
-            ui.label("Run Dose Calculation").classes("text-h6 q-mb-md")
+            with ui.column().classes("max-w-4xl mx-auto w-full gap-6"):
+                ui.label("Run Dose Calculation").classes("text-2xl font-bold tracking-tight")
 
-            # settings summary card
-            with ui.card().classes("w-full q-mb-md"):
-                ui.label("Current settings").classes("text-subtitle2 q-mb-sm")
+                # settings summary card
+                with ui.card().classes("brutal-card w-full"):
+                    ui.label("Current settings").classes("text-subtitle2 q-mb-md")
 
-                with ui.grid(columns=3).classes("w-full gap-4"):
-                    # Section 1: Input Data
-                    with ui.column().classes("gap-1"):
-                        ui.label("Input Data").classes("text-caption text-grey-5 font-bold")
-                        ui.label().bind_text_from(state, "file_name", backward=lambda v: f"File: {v}")
-                        ui.label().bind_text_from(state, "rdsr_df", backward=lambda v: f"Events: {len(v) if v is not None else 0}")
-                        ui.label().bind_text_from(state, "model", backward=lambda v: f"Scanner: {v}")
-                        ui.label().bind_text_from(state, "normalization_method", backward=lambda v: f"Normalization: {v}").classes(
-                            "text-warning" if state.normalization_method == "Fallback" else ""
-                        )
+                    with ui.grid(columns=3).classes("w-full gap-6 mono-text text-xs"):
+                        # Section 1: Input Data
+                        with ui.column().classes("gap-1"):
+                            ui.label("Input Data").classes("text-[10px] text-aurora-teal font-bold uppercase")
+                            ui.label().bind_text_from(state, "file_name", backward=lambda v: f"File: {v if v else 'None'}")
+                            ui.label().bind_text_from(state, "rdsr_df", backward=lambda v: f"Events: {len(v) if v is not None else 0}")
+                            ui.label().bind_text_from(state, "manufacturer", backward=lambda v: f"Scanner: {v} {state.model} ({state.normalization_method})")
+                        
+                        # Section 2: Phantom
+                        with ui.column().classes("gap-1"):
+                            ui.label("Phantom Setup").classes("text-[10px] text-aurora-purple font-bold uppercase")
+                            ui.label().bind_text_from(state, "phantom_model", backward=lambda v: f"Model: {v}")
+                            ui.label().bind_text_from(state, "d_lon", backward=lambda v: f"Patient Offsets: {v}, {state.d_ver}, {state.d_lat} cm")
+                            ui.label().bind_text_from(state, "table_offset_x", backward=lambda v: f"Table Offsets: {v}, {state.table_offset_y}, {state.table_offset_z} cm")
 
-                    # Section 2: Phantom
-                    with ui.column().classes("gap-1"):
-                        ui.label("Phantom Setup").classes("text-caption text-grey-5 font-bold")
-                        ui.label().bind_text_from(state, "phantom_model", backward=lambda v: f"Model: {v}")
-                        ui.label().bind_text_from(state, "human_mesh", backward=lambda v: f"Mesh: {v}").bind_visibility_from(state, "phantom_model", backward=lambda v: v == "human")
-                        ui.label().bind_text_from(state, "patient_orientation", backward=lambda v: f"Orient: {v}")
-                        ui.label().bind_text_from(state, "d_lon", backward=lambda v: f"Offsets: {v}, {state.d_ver}, {state.d_lat} cm")
+                        # Section 3: Physics
+                        with ui.column().classes("gap-1"):
+                            ui.label("Physics Parameters").classes("text-[10px] text-aurora-pink font-bold uppercase")
+                            ui.label().bind_text_from(state, "estimate_k_tab", backward=lambda v: f"k_tab: {'Estimated' if v else 'Measured'}")
+                            ui.label().bind_text_from(state, "inherent_filtration", backward=lambda v: f"Filtration: {v} mmAl")
 
-                    # Section 3: Physics
-                    with ui.column().classes("gap-1"):
-                        ui.label("Physics Parameters").classes("text-caption text-grey-5 font-bold")
-                        ui.label().bind_text_from(state, "estimate_k_tab", backward=lambda v: f"k_tab: {'Estimated (' + str(state.k_tab_val) + ')' if v else 'Measured'}")
-                        ui.label().bind_text_from(state, "inherent_filtration", backward=lambda v: f"Filtration: {v} mmAl")
+                with ui.column().classes("w-full items-center gap-4 q-mt-xl"):
+                    calc_btn = ui.button("▶  Run Calculation", on_click=lambda: do_calculate(), icon="bolt").classes(
+                        "brutal-btn brutal-btn-teal text-xl px-12 py-4"
+                    )
+                    run_btn_drawer.on("click", lambda: do_calculate())
 
-                def _refresh_summary():
-                    # We use binding now, but this keeps the timer happy if needed for other things
-                    pass
-
-                ui.timer(1.0, _refresh_summary)
-
-            calc_progress = ui.linear_progress(value=0).classes("w-full q-mb-xs")
-            calc_progress.visible = False
-            calc_status_label = ui.label("").classes("text-caption text-grey-6 q-mb-md")
+                    calc_progress = ui.linear_progress(value=0, color="purple").classes("w-full")
+                    calc_progress.visible = False
+                    calc_status_label = ui.label("Waiting...").classes("text-caption text-grey-5")
 
             async def do_calculate():
-                dprint("GUI", "Calculate button clicked")
                 if state.rdsr_df is None:
-                    ui.notify("Load an RDSR file first (tab 1)", type="warning")
+                    ui.notify("Load an RDSR file first (tab 1)", color="warning")
                     return
 
                 calc_btn.disable()
                 run_btn_drawer.disable()
                 calc_progress.visible = True
                 calc_progress.set_value(0)
-                calc_status_label.set_text("Starting…")
+                calc_status_label.set_text("Starting...")
 
                 def progress_cb(fraction: float, label: str):
                     calc_progress.set_value(fraction)
                     calc_status_label.set_text(label)
 
-                dprint("GUI", "Running calculation via io_bound")
                 ok, msg = await run.io_bound(run_calculation, state, progress_cb)
 
                 calc_progress.set_value(1.0)
@@ -388,56 +512,69 @@ def index():
                 if ok:
                     psd_label.set_text(f"PSD: {state.psd:.2f} mGy")
                     calc_status_label.set_text(f"Done — {msg}")
-                    ui.notify(f"✓ {msg}", type="positive")
+                    ui.notify(f"✓ {msg}", color="positive")
                     tabs.set_value("results")
                 else:
                     calc_status_label.set_text("Calculation failed")
                     ui.notify(f"Error: {msg[:300]}", type="negative", timeout=10000)
 
-            calc_btn = ui.button("▶  Run Calculation", on_click=do_calculate, color="positive").classes(
-                "text-h6 q-px-xl q-py-sm"
-            )
-            run_btn_drawer.on("click", do_calculate)
-
         # ══════════════════════════════════════════════════════════════════
         # TAB 5 — RESULTS
         # ══════════════════════════════════════════════════════════════════
         with ui.tab_panel("results"):
-            ui.label("Results").classes("text-h6 q-mb-md")
+            with ui.column().classes("max-w-6xl mx-auto w-full gap-6"):
+                ui.label("Results").classes("text-2xl font-bold tracking-tight")
 
-            # metric cards
-            with ui.row().classes("gap-4 q-mb-md"):
-                with ui.card().classes("q-pa-md text-center"):
-                    ui.label("Peak Skin Dose").classes("text-caption text-grey-6")
-                    psd_metric = ui.label("—").classes("text-h5 text-positive text-bold")
+                # metric cards
+                with ui.row().classes("w-full gap-6"):
+                    with ui.card().classes("brutal-card grow q-pa-lg text-center"):
+                        ui.label("Peak Skin Dose").classes("text-caption text-grey-6")
+                        psd_metric = ui.label("—").classes("text-4xl text-aurora-purple font-bold")
 
-                with ui.card().classes("q-pa-md text-center"):
-                    ui.label("Total Air Kerma").classes("text-caption text-grey-6")
-                    kerma_metric = ui.label("—").classes("text-h5 text-bold")
+                    with ui.card().classes("brutal-card grow q-pa-lg text-center"):
+                        ui.label("Total Air Kerma").classes("text-caption text-grey-6")
+                        kerma_metric = ui.label("—").classes("text-4xl text-white font-bold")
 
-                with ui.card().classes("q-pa-md text-center"):
-                    ui.label("Events").classes("text-caption text-grey-6")
-                    events_metric = ui.label("—").classes("text-h5 text-bold")
+                    with ui.card().classes("brutal-card grow q-pa-lg text-center"):
+                        ui.label("Events").classes("text-caption text-grey-6")
+                        events_metric = ui.label("—").classes("text-4xl text-aurora-teal font-bold")
 
             def _refresh_metrics():
                 if state.calculation_done and state.psd is not None:
                     psd_metric.set_text(f"{state.psd:.2f} mGy")
-                    kerma_metric.set_text(f"{state.air_kerma:.2f} mGy")
+                    kerma_metric.set_text(f"{state.air_kerma:.1f} mGy")
                     events_metric.set_text(str(len(state.rdsr_df)))
 
             ui.timer(1.0, _refresh_metrics)
 
-            # colorscale selector
-            with ui.row().classes("items-center gap-3 q-mb-sm"):
-                ui.label("Colorscale:").classes("text-caption")
-                ui.select(COLORSCALES, value=state.colorscale).bind_value(state, "colorscale").classes(
-                    "w-40"
-                ).on("update:model-value", lambda: _refresh_dosemap())
+            with ui.row().classes("w-full gap-6"):
+                # dose map plot
+                with ui.card().classes("grow brutal-card p-0 overflow-hidden relative"):
+                    dosemap_plot = ui.plotly({}).classes("w-full").style("height:700px")
+                    dosemap_spinner = ui.spinner(size="lg", color="purple").classes("absolute-center")
+                    dosemap_spinner.visible = False
 
-            # dose map plot
-            dosemap_plot = ui.plotly({}).classes("w-full").style("height:650px")
-            dosemap_spinner = ui.spinner(size="lg")
-            dosemap_spinner.visible = False
+                # Controls & Correction factors
+                with ui.column().classes("w-80 gap-6"):
+                    with ui.card().classes("brutal-card w-full"):
+                        ui.label("Visual settings").classes("text-subtitle2 q-mb-sm")
+                        ui.select(COLORSCALES, label="Colorscale", value=state.colorscale).bind_value(state, "colorscale").on(
+                            "update:model-value", lambda: _refresh_dosemap()
+                        ).classes("w-full")
+                        
+                        ui.button("REGENERATE PLOT", on_click=lambda: _refresh_dosemap()).classes("full-width brutal-btn brutal-btn-teal q-mt-md")
+
+                    ui.label("Correction factors per event").classes("text-caption text-grey-6")
+                    corr_table = ui.table(
+                        columns=[
+                            {"name": "event", "label": "EV", "field": "event", "align": "right"},
+                            {"name": "k_isq", "label": "ISQ", "field": "k_isq", "align": "right"},
+                            {"name": "k_bs", "label": "BS", "field": "k_bs", "align": "right"},
+                            {"name": "k_tab", "label": "TAB", "field": "k_tab", "align": "right"},
+                        ],
+                        rows=[],
+                        row_key="event",
+                    ).classes("w-full brutal-card")
 
             def _refresh_dosemap():
                 if not state.calculation_done:
@@ -450,55 +587,32 @@ def index():
 
             ui.timer(1.5, lambda: _refresh_dosemap() if state.calculation_done and state.dosemap_fig is None else None)
 
-            # correction factor table
-            ui.label("Correction factors per event").classes("text-subtitle2 q-mt-md q-mb-xs")
-            corr_table = ui.table(
-                columns=[
-                    {"name": "event", "label": "Event", "field": "event", "align": "right"},
-                    {"name": "k_isq", "label": "k_isq (mean)", "field": "k_isq", "align": "right"},
-                    {"name": "k_bs", "label": "k_bs (mean)", "field": "k_bs", "align": "right"},
-                    {"name": "k_med", "label": "k_med", "field": "k_med", "align": "right"},
-                    {"name": "k_tab", "label": "k_tab", "field": "k_tab", "align": "right"},
-                    {"name": "kerma", "label": "K_IRP (mGy)", "field": "kerma", "align": "right"},
-                ],
-                rows=[],
-                row_key="event",
-            ).classes("w-full")
-
             def _refresh_corr_table():
                 if not state.calculation_done or state.output is None:
                     return
                 out = state.output
                 corrections = out.get("corrections", {})
-                hits_list = corrections.get("correction_value_index", [])
                 k_isq_list = corrections.get("inverse_square_law", [])
                 k_bs_list = corrections.get("backscatter", [])
-                k_med_list = corrections.get("medium", [])
                 k_tab_list = corrections.get("table", [])
-                kerma_list = corrections.get("kerma", [])
 
                 import numpy as np
                 rows = []
-                n = len(hits_list)
+                n = len(k_isq_list)
                 for i in range(n):
                     def _mean(lst, i):
                         try:
-                            if not lst or i >= len(lst):
-                                return "—"
+                            if not lst or i >= len(lst): return "—"
                             v = lst[i]
-                            if hasattr(v, "__len__") and len(v):
-                                return round(float(np.mean(v)), 4)
-                            return round(float(v), 4) if v is not None else "—"
-                        except Exception:
-                            return "—"
+                            if hasattr(v, "__len__") and len(v): return round(float(np.mean(v)), 3)
+                            return round(float(v), 3) if v is not None else "—"
+                        except Exception: return "—"
 
                     rows.append({
                         "event": i + 1,
                         "k_isq": _mean(k_isq_list, i),
                         "k_bs": _mean(k_bs_list, i),
-                        "k_med": _mean(k_med_list, i),
                         "k_tab": _mean(k_tab_list, i),
-                        "kerma": _mean(kerma_list, i),
                     })
                 corr_table.rows = rows
                 corr_table.update()
@@ -509,72 +623,61 @@ def index():
         # TAB 6 — EXPORT
         # ══════════════════════════════════════════════════════════════════
         with ui.tab_panel("export"):
-            ui.label("Export Results").classes("text-h6 q-mb-md")
+            with ui.column().classes("max-w-4xl mx-auto w-full gap-6"):
+                ui.label("Export Results").classes("text-2xl font-bold tracking-tight")
 
-            no_results_note = ui.label(
-                "Run a calculation first (tab 4) to enable exports."
-            ).classes("text-caption text-grey-6 q-mb-md")
+                no_results_note = ui.label(
+                    "Run a calculation first (tab 4) to enable exports."
+                ).classes("text-caption text-grey-6 q-mb-md").bind_visibility_from(state, "calculation_done", backward=lambda v: not v)
 
-            with ui.card().classes("w-full q-mb-md"):
-                ui.label("JSON — full results dict").classes("text-subtitle2 q-mb-xs")
-                ui.label(
-                    "Contains PSD, air kerma, dose map, correction factors, phantom geometry, and event data."
-                ).classes("text-caption text-grey-6 q-mb-sm")
+                with ui.grid(columns=2).classes("w-full gap-6"):
+                    with ui.card().classes("brutal-card"):
+                        ui.label("JSON — full results dict").classes("text-subtitle2 q-mb-sm")
+                        ui.label("Full results dictionary containing all data.").classes("text-xs text-grey-5 q-mb-md")
+                        ui.button("Download JSON", icon="download", on_click=lambda: download_json()).classes("full-width brutal-btn")
+
+                    with ui.card().classes("brutal-card brutal-card-teal"):
+                        ui.label("Interactive HTML dose map").classes("text-subtitle2 q-mb-sm")
+                        ui.label("Standalone HTML file with interactive 3D map.").classes("text-xs text-grey-5 q-mb-md")
+                        ui.button("Download HTML", icon="html", on_click=lambda: download_html()).classes("full-width brutal-btn")
+
+                    with ui.card().classes("brutal-card"):
+                        ui.label("PNG dose map").classes("text-subtitle2 q-mb-sm")
+                        ui.label("Static capture of the current dose map view.").classes("text-xs text-grey-5 q-mb-md")
+                        ui.button("Download PNG", icon="image", on_click=lambda: download_png()).classes("full-width brutal-btn")
 
                 def download_json():
                     if not state.calculation_done or state.output is None:
-                        ui.notify("No results yet", type="warning")
+                        ui.notify("No data to export", color="warning")
                         return
                     data = json.dumps(state.output, default=str, indent=2).encode()
                     ui.download(data, "mypyskindose_results.json")
 
-                ui.button("Download JSON", on_click=download_json, icon="download").props("outline")
-
-            with ui.card().classes("w-full q-mb-md"):
-                ui.label("Interactive HTML dose map").classes("text-subtitle2 q-mb-xs")
-                ui.label(
-                    "Self-contained HTML file with the interactive 3D Plotly dose map."
-                ).classes("text-caption text-grey-6 q-mb-sm")
-
                 async def download_html():
                     if not state.calculation_done:
-                        ui.notify("No results yet", type="warning")
+                        ui.notify("No data to export", color="warning")
                         return
                     html_bytes = await run.io_bound(_make_dosemap_html)
                     if html_bytes:
                         ui.download(html_bytes, "dosemap.html")
                     else:
-                        ui.notify("Could not generate HTML", type="negative")
-
-                ui.button("Download HTML", on_click=download_html, icon="download").props("outline")
-
-            with ui.card().classes("w-full q-mb-md"):
-                ui.label("PNG dose map (4 views)").classes("text-subtitle2 q-mb-xs")
-                ui.label(
-                    "Static PNG images from right, back, left, and front camera angles."
-                ).classes("text-caption text-grey-6 q-mb-sm")
+                        ui.notify("Export failed", color="negative")
 
                 async def download_png():
                     if not state.calculation_done:
-                        ui.notify("No results yet", type="warning")
+                        ui.notify("No data to export", color="warning")
                         return
                     png_bytes = await run.io_bound(_make_dosemap_png)
                     if png_bytes:
-                        ui.download(png_bytes, "dosemap_right.png")
+                        ui.download(png_bytes, "dosemap.png")
                     else:
-                        ui.notify(
-                            "PNG export requires kaleido. Install with: pip install kaleido",
-                            type="warning",
-                            timeout=6000,
-                        )
-
-                ui.button("Download PNG (right view)", on_click=download_png, icon="download").props("outline")
+                        ui.notify("PNG export requires kaleido", color="warning")
 
     # ── Restore view if data already loaded ──
     if state.rdsr_df is not None:
         dprint("GUI", "Restoring UI state from loaded data")
-        file_label.set_text(f"📁 {state.file_name}")
-        events_label.set_text(f"📊 {len(state.rdsr_df)} events")
+        file_label.set_text(state.file_name.upper())
+        events_label.set_text(f"{len(state.rdsr_df)} EVENTS")
         _refresh_event_table()
         if hasattr(state, "active_tab") and state.active_tab:
             tabs.set_value(state.active_tab)
@@ -586,7 +689,6 @@ def _make_geometry_fig(mode: str, event_index: int):
     try:
         import plotly.graph_objects as go
         from mypyskindose.helpers.calculate_rotation_matrices import calculate_rotation_matrices
-        from mypyskindose.geom_calc import position_patient_phantom_on_table
         from mypyskindose.phantom_class import Phantom
         from mypyskindose.plotting.create_geometry_plot import create_geometry_plot
         from mypyskindose import constants as c
@@ -601,24 +703,33 @@ def _make_geometry_fig(mode: str, event_index: int):
         table = Phantom(phantom_model=c.PHANTOM_MODEL_TABLE, phantom_dim=settings.phantom.dimension)
         pad = Phantom(phantom_model=c.PHANTOM_MODEL_PAD, phantom_dim=settings.phantom.dimension)
 
-        # We need to capture the figure instead of showing it.
-        # Monkey-patch fig.show to intercept.
         captured = {}
-
         original_show = go.Figure.show
-
-        def _capture_show(self, *a, **kw):
-            captured["fig"] = self
-
+        def _capture_show(self, *a, **kw): captured["fig"] = self
         go.Figure.show = _capture_show
+        
         try:
             create_geometry_plot(normalized_data=data_norm, table=table, pad=pad, settings=settings)
         finally:
             go.Figure.show = original_show
 
         fig = captured.get("fig")
-        return fig.to_dict() if fig else None
-    except Exception as exc:
+        if fig:
+            bg = "rgb(5,5,5)"
+            txt = "#F8FAFC"
+            fig.update_layout(
+                paper_bgcolor=bg,
+                plot_bgcolor=bg,
+                font=dict(color=txt, family="Inter, sans-serif"),
+                scene=dict(
+                    xaxis=dict(gridcolor="#262626"),
+                    yaxis=dict(gridcolor="#262626"),
+                    zaxis=dict(gridcolor="#262626"),
+                )
+            )
+            return fig.to_dict()
+        return None
+    except Exception:
         import traceback as tb
         print(tb.format_exc())
         return None
@@ -629,8 +740,6 @@ def _make_dosemap_fig():
     try:
         import numpy as np
         import plotly.graph_objects as go
-        from mypyskindose.phantom_class import Phantom
-        from mypyskindose import constants as c
 
         if state.output is None:
             return None
@@ -654,8 +763,7 @@ def _make_dosemap_fig():
         ]
 
         cmax = float(np.max(dose_map))
-        if cmax == 0:
-            cmax = 1.0
+        if cmax == 0: cmax = 1.0
 
         mesh = go.Mesh3d(
             x=r[:, 0], y=r[:, 1], z=r[:, 2],
@@ -668,21 +776,22 @@ def _make_dosemap_fig():
             showscale=True,
             hoverinfo="text",
             text=hover,
-            colorbar=dict(title=dict(text="Skin dose [mGy]")),
+            colorbar=dict(title=dict(text="Skin dose [mGy]", font=dict(size=12))),
         )
 
-        bg = "rgb(33,33,33)" if state.dark_mode else "rgb(252,252,252)"
-        txt = "rgb(252,252,252)" if state.dark_mode else "rgb(52,49,49)"
+        bg = "rgb(5,5,5)"  # Deep Black
+        txt = "#F8FAFC"
 
         layout = go.Layout(
             paper_bgcolor=bg,
-            font=dict(color=txt),
+            plot_bgcolor=bg,
+            font=dict(color=txt, family="Inter, sans-serif"),
             margin=dict(l=0, r=0, b=40, t=40),
             scene=dict(
                 aspectmode="data",
-                xaxis=dict(title="X - LON [cm]", backgroundcolor=bg, color=txt),
-                yaxis=dict(title="Y - VER [cm]", backgroundcolor=bg, color=txt),
-                zaxis=dict(title="Z - LAT [cm]", backgroundcolor=bg, color=txt),
+                xaxis=dict(title="X - LON [cm]", backgroundcolor=bg, color=txt, gridcolor="#262626"),
+                yaxis=dict(title="Y - VER [cm]", backgroundcolor=bg, color=txt, gridcolor="#262626"),
+                zaxis=dict(title="Z - LAT [cm]", backgroundcolor=bg, color=txt, gridcolor="#262626"),
             ),
         )
         fig = go.Figure(data=[mesh], layout=layout)

@@ -12,7 +12,7 @@
     - also allow setting max events for rendering patient as a box or slider (max_events_for_patient_inclusion)
     - maybe it will also be worth having some presets for patient position (e.g. cardiac, head/neck, abdominal, etc)
     - also when user adjusts sliders, have the patient position update in real time on the geometry plot in geometry tab
-- redesign GUI according to DESIGN.md
+- [x] redesign GUI according to DESIGN.md
 * add some debug/warning if any dose events have no intersection with patient
 - download/export HTML button didn't work
     - not sure about others
@@ -22,4 +22,4 @@
     - this repo may be useful https://github.com/dhen2714/PySkinDose
     - will likely have different column names that will need to be mapped/normalized
 - add help docs explaining what all the settings are in the GUI and how to use it
-- move Geometry tab to position 3 instead of 2
+- [x] move Geometry tab to position 3 instead of 2

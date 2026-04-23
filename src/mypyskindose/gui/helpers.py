@@ -60,6 +60,9 @@ def load_rdsr(file_path: Path, state: AppState) -> tuple[bool, str]:
         state.manufacturer = norm.matched_manufacturer
         state.model = norm.matched_model
         state.normalization_method = norm.normalization_method
+        state.table_offset_x = norm.trans_offset.x
+        state.table_offset_y = norm.trans_offset.y
+        state.table_offset_z = norm.trans_offset.z
         state.normalization_warnings = []
         if state.normalization_method == "Fallback":
             state.normalization_warnings.append(

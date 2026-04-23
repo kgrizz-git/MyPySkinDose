@@ -25,6 +25,9 @@ class AppState:
     model: str = ""
     normalization_method: str = "Unknown"
     normalization_warnings: list[str] = field(default_factory=list)
+    table_offset_x: float = 0.0
+    table_offset_y: float = 0.0
+    table_offset_z: float = 0.0
 
     # ── Settings (raw values mirrored from UI widgets) ─────────────────────
     phantom_model: str = "human"
