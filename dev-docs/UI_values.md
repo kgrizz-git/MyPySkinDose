@@ -19,12 +19,12 @@ This document maps the primary design tokens (colors, gradients, effects) used i
 Defined in the `body` and `.q-drawer` styles.
 
 ### Main Window Gradients
-*   **Pink (Top-Right):** `rgba(160, 90, 120, 0.17)` (55% radius)
-*   **Indigo (Top-Left):** `rgba(80, 75, 195, 0.17)` (60% radius)
-*   **Blue-Cyan (Bottom-Right):** `rgba(35, 110, 135, 0.16)` (60% radius)
+*   **Pink (Top-Right):** `rgba(160, 135, 150, 0.18)` (60% radius)
+*   **Indigo (Top-Left):** `rgba(120, 135, 195, 0.17)` (60% radius)
+*   **Blue-Cyan (Bottom-Right):** `rgba(105, 120, 135, 0.17)` (60% radius)
 
 ### Navigation Drawer
-*   **Indigo Glow (Bottom-Left):** `rgba(80, 75, 195, 0.12)` (70% radius)
+*   **Indigo Glow (Bottom-Left):** `rgba(120, 135, 195, 0.12)` (70% radius)
 
 ## 🔘 Component Styling
 

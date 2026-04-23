@@ -89,9 +89,9 @@ body {
     color: var(--text-main) !important;
     font-family: 'Inter', -apple-system, sans-serif;
     background-image: 
-        radial-gradient(at 100% 0%, rgba(160, 90, 120, 0.17) 0%, transparent 55%),
-        radial-gradient(at 0% 0%, rgba(80, 75, 195, 0.17) 0%, transparent 60%),
-        radial-gradient(at 100% 100%, rgba(35, 110, 135, 0.16) 0%, transparent 60%) !important;
+        radial-gradient(at 100% 0%, rgba(160, 135, 150, 0.18) 0%, transparent 60%),
+        radial-gradient(at 0% 0%, rgba(120, 135, 195, 0.17) 0%, transparent 60%),
+        radial-gradient(at 100% 100%, rgba(105, 120, 135, 0.17) 0%, transparent 60%) !important;
     background-attachment: fixed;
 }
 
@@ -120,7 +120,7 @@ body {
 
 .q-drawer {
     background: linear-gradient(180deg, #0D0D0D 0%, #050505 100%) !important;
-    background-image: radial-gradient(at 0% 100%, rgba(80, 75, 195, 0.12) 0%, transparent 70%) !important;
+    background-image: radial-gradient(at 0% 100%, rgba(120, 135, 195, 0.12) 0%, transparent 70%) !important;
     border-right: 2px solid var(--border-brutal) !important;
 }
 
