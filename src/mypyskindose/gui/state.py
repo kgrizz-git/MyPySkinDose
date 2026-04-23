@@ -19,6 +19,8 @@ import pandas as pd
 class AppState:
     # ── RDSR data ──────────────────────────────────────────────────────────
     rdsr_df: pd.DataFrame | None = None
+    rdsr_raw_df: pd.DataFrame | None = None
+    view_raw: bool = False
     file_path: Path | None = None
     file_name: str = ""
     manufacturer: str = ""

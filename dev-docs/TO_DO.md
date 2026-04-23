@@ -27,3 +27,10 @@
 - add support for multiple exams
 - [x] is the rdsr table showing values straight out of the rdsr, or have they been processed/normalized in some way?
     - **Answer**: The table displays **Normalized Data**. The raw RDSR has been parsed, scaled, and translated (e.g., mm to cm, coordinate alignment) to match the internal physics engine's requirements.
+- [x] make the native window appear on top when it opens
+- institute semver
+- institute trufflehog/gitleaks, dependabot, grype, etc
+* allow manual interactive setting of table offsets in gui
+- call it GUISkinDose?
+- reduce spacing/padding around text elements in navigation section of left pane
+- soften brutalist look? and make more sleek/modern

@@ -6,8 +6,11 @@ import traceback
 from pathlib import Path
 from typing import Any
 
+import pydicom
+
 from mypyskindose import load_settings_example_json
-from mypyskindose.helpers.read_and_normalize_rdsr_data import read_and_normalise_rdsr_data
+from mypyskindose.rdsr_parser import rdsr_parser
+from mypyskindose.rdsr_normalizer import rdsr_normalizer
 from mypyskindose.settings import PyskindoseSettings
 
 from .state import AppState
@@ -49,7 +52,20 @@ def load_rdsr(file_path: Path, state: AppState) -> tuple[bool, str]:
     """Parse and normalise an RDSR file. Returns (success, message)."""
     try:
         settings = build_settings(state, mode="calculate_dose")
-        df = read_and_normalise_rdsr_data(rdsr_filepath=str(file_path), settings=settings)
+        
+        # Manually parse and normalise so we can keep the raw version
+        data_raw = pydicom.dcmread(str(file_path))
+        data_parsed = rdsr_parser(data_raw, silence_pydicom_warnings=settings.silence_pydicom_warnings)
+        
+        # Save raw copy
+        state.rdsr_raw_df = data_parsed.copy()
+        
+        # Normalize
+        df = rdsr_normalizer(data_parsed, settings=settings)
+        
+        if settings.remove_invalid_rows:
+            if invalid_kvp_rows := len(df[df.kVp == 0]):
+                df = df[df.kVp != 0].reset_index(drop=True)
 
         state.rdsr_df = df
         state.file_path = file_path
