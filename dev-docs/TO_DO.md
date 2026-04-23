@@ -34,3 +34,4 @@
 - call it GUISkinDose?
 - reduce spacing/padding around text elements in navigation section of left pane
 - soften brutalist look? and make more sleek/modern
+- reduce saturation of background gradients only? (not brightness - just curious to see less colorful)
