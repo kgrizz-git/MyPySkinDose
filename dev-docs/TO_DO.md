@@ -9,3 +9,9 @@
 - redesign GUI according to DESIGN.md
 - download/export HTML button didn't work
     - not sure about others
+- extend code to be able to handle dose event data exported from Radimetrics or similar software
+    - these files may have more/less data than RDSR files
+    - typically a table in csv format with one row per dose event
+    - will likely have different column names that will need to be mapped/normalized
+- add help docs explaining what all the settings are in the GUI and how to use it
+- move Geometry tab to position 3 instead of 2

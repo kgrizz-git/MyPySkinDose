@@ -32,7 +32,7 @@ The GUI must surface the `patient_offset` parameters (`d_lon`, `d_lat`, `d_ver`)
 
 ### B. Manufacturer Normalization Transparency
 The GUI should validate the uploaded RDSR against `normalization_settings.json`.
-- **Recommendation**: During "Step 1 — Upload RDSR", if the scanner's `Manufacturer` and `Model` are not found in the normalization database, the GUI should display a clear warning: *"Warning: This scanner model is not in the normalization database. Table offsets may be incorrect."* This prevents silent failures where the dose projects incorrectly due to missing machine calibrations.
+- **Recommendation**: During "Step 1 — Upload RDSR", if the scanner's `Manufacturer` and `Model` are not found in the normalization database, the GUI should display a clear warning: *"Warning: This scanner model is not in the normalization database. Table offsets may be incorrect."* This prevents silent failures where the dose projects incorrectly due to missing machine calibrations. The offsets should also be applied immediately, so that the Geometry tab shows the correct position of the tube and detector relative to the table.
 
 ### C. Procedure-Specific Presets
 Provide a dropdown for "Procedure Presets" (e.g., Cardiac, Head/Neck, Abdominal). Selecting a preset would automatically populate the `patient_offset` with sensible defaults (e.g., sliding the patient down the table for a cardiac procedure) and select an appropriate `human_mesh`.

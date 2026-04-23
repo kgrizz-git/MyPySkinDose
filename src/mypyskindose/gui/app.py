@@ -90,7 +90,18 @@ def index():
         # TAB 1 — UPLOAD
         # ══════════════════════════════════════════════════════════════════
         with ui.tab_panel("upload"):
-            ui.label("Load RDSR File").classes("text-h6 q-mb-md")
+            with ui.row().classes("w-full items-center justify-between"):
+                ui.label("Load RDSR File").classes("text-h6")
+
+            # Normalization warning banner (using card for compatibility)
+            with ui.card().classes("bg-warning text-white w-full q-pa-sm q-mb-md").bind_visibility_from(
+                state, "normalization_method", backward=lambda v: v == "Fallback"
+            ):
+                with ui.row().classes("items-center gap-2"):
+                    ui.icon("warning", size="sm")
+                    ui.label().bind_text_from(
+                        state, "normalization_warnings", backward=lambda ws: ws[0] if ws else ""
+                    )
 
             with ui.card().classes("w-full q-mb-md"):
                 ui.label("Upload a DICOM RDSR (.dcm) file").classes("text-subtitle2 q-mb-sm")
@@ -314,20 +325,36 @@ def index():
 
             # settings summary card
             with ui.card().classes("w-full q-mb-md"):
-                ui.label("Current settings").classes("text-subtitle2 q-mb-xs")
-                calc_summary = ui.label("").classes("text-caption text-grey-6")
+                ui.label("Current settings").classes("text-subtitle2 q-mb-sm")
+
+                with ui.grid(columns=3).classes("w-full gap-4"):
+                    # Section 1: Input Data
+                    with ui.column().classes("gap-1"):
+                        ui.label("Input Data").classes("text-caption text-grey-5 font-bold")
+                        ui.label().bind_text_from(state, "file_name", backward=lambda v: f"File: {v}")
+                        ui.label().bind_text_from(state, "rdsr_df", backward=lambda v: f"Events: {len(v) if v is not None else 0}")
+                        ui.label().bind_text_from(state, "model", backward=lambda v: f"Scanner: {v}")
+                        ui.label().bind_text_from(state, "normalization_method", backward=lambda v: f"Normalization: {v}").classes(
+                            "text-warning" if state.normalization_method == "Fallback" else ""
+                        )
+
+                    # Section 2: Phantom
+                    with ui.column().classes("gap-1"):
+                        ui.label("Phantom Setup").classes("text-caption text-grey-5 font-bold")
+                        ui.label().bind_text_from(state, "phantom_model", backward=lambda v: f"Model: {v}")
+                        ui.label().bind_text_from(state, "human_mesh", backward=lambda v: f"Mesh: {v}").bind_visibility_from(state, "phantom_model", backward=lambda v: v == "human")
+                        ui.label().bind_text_from(state, "patient_orientation", backward=lambda v: f"Orient: {v}")
+                        ui.label().bind_text_from(state, "d_lon", backward=lambda v: f"Offsets: {v}, {state.d_ver}, {state.d_lat} cm")
+
+                    # Section 3: Physics
+                    with ui.column().classes("gap-1"):
+                        ui.label("Physics Parameters").classes("text-caption text-grey-5 font-bold")
+                        ui.label().bind_text_from(state, "estimate_k_tab", backward=lambda v: f"k_tab: {'Estimated (' + str(state.k_tab_val) + ')' if v else 'Measured'}")
+                        ui.label().bind_text_from(state, "inherent_filtration", backward=lambda v: f"Filtration: {v} mmAl")
 
                 def _refresh_summary():
-                    if state.rdsr_df is None:
-                        calc_summary.set_text("No file loaded.")
-                        return
-                    calc_summary.set_text(
-                        f"File: {state.file_name}  |  Events: {len(state.rdsr_df)}  |  "
-                        f"Phantom: {state.phantom_model}"
-                        + (f" / {state.human_mesh}" if state.phantom_model == "human" else "")
-                        + f"  |  k_tab: {'estimated ' + str(state.k_tab_val) if state.estimate_k_tab else 'measured'}"
-                        + f"  |  Filtration: {state.inherent_filtration} mmAl"
-                    )
+                    # We use binding now, but this keeps the timer happy if needed for other things
+                    pass
 
                 ui.timer(1.0, _refresh_summary)
 

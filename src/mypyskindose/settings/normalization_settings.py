@@ -14,6 +14,7 @@ from mypyskindose.helpers.create_attributes_string import create_attributes_stri
 from mypyskindose.settings.rotation_direction import RotationDirection
 from mypyskindose.settings.translation_direction import TranslationDirection
 from mypyskindose.settings.translation_offset import TranslationOffset
+from mypyskindose.debug import dprint
 
 
 class NormalizationSettings:
@@ -44,6 +45,9 @@ class NormalizationSettings:
         self.rot_dir: RotationDirection = RotationDirection()
         self.field_size_mode: Optional[str] = None
         self.detector_side_length: Optional[str] = None
+        self.normalization_method: str = "Unknown"
+        self.matched_manufacturer: str = ""
+        self.matched_model: str = ""
 
         self.attrs_str = create_attributes_string(attrs_parent=self, object_name="normalization", indent_level=0)
 
@@ -59,11 +63,31 @@ class NormalizationSettings:
         ]
 
         if not setting:
+            dprint("PROCESSING", f"No specific match for {manufacturer} {model}. Looking for 'Default'...")
+            setting = [
+                setting
+                for setting in self.normalization_settings_list
+                if "default" == setting[KEY_NORMALIZATION_MANUFACTURER].casefold()
+            ]
+            self.normalization_method = "Fallback"
+        else:
+            self.normalization_method = "Matched"
+
+        if not setting:
+            self.normalization_method = "None"
             raise NotImplementedError(
-                f"Could not find settings for the given manufacturer and model ({manufacturer=}, {model=})"
+                f"Could not find settings for the given manufacturer and model ({manufacturer=}, {model=}) and no 'Default' entry found."
             )
 
         setting = setting[0]
+        self.matched_manufacturer = setting[KEY_NORMALIZATION_MANUFACTURER]
+        self.matched_model = setting[KEY_NORMALIZATION_MODELS][0] if setting[KEY_NORMALIZATION_MODELS] else "N/A"
+
+        dprint(
+            "PROCESSING",
+            f"Normalization: {self.normalization_method} (Matched: {self.matched_manufacturer} - {self.matched_model})",
+        )
+        dprint("PROCESSING", f"Applied offsets: {setting.get('translation_offset')}")
 
         self.trans_offset.update_translation_offset(offset=setting.get("translation_offset"))
         self.trans_dir.update_translation_direction(directions=setting.get("translation_direction"))

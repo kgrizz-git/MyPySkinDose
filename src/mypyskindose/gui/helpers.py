@@ -50,12 +50,29 @@ def load_rdsr(file_path: Path, state: AppState) -> tuple[bool, str]:
     try:
         settings = build_settings(state, mode="calculate_dose")
         df = read_and_normalise_rdsr_data(rdsr_filepath=str(file_path), settings=settings)
+
         state.rdsr_df = df
         state.file_path = file_path
         state.file_name = file_path.name
+
+        # Extract metadata for the GUI
+        from mypyskindose.constants import KEY_RDSR_MANUFACTURER, KEY_RDSR_MANUFACTURER_MODEL_NAME
+        state.manufacturer = df[KEY_RDSR_MANUFACTURER][0] if KEY_RDSR_MANUFACTURER in df.columns else "Unknown"
+        state.model = df[KEY_RDSR_MANUFACTURER_MODEL_NAME][0] if KEY_RDSR_MANUFACTURER_MODEL_NAME in df.columns else "Unknown"
+
+        norm = settings.normalization_settings
+        state.normalization_method = norm.normalization_method
+        state.normalization_warnings = []
+        if state.normalization_method == "Fallback":
+            state.normalization_warnings.append(
+                f"Scanner model '{state.model}' not found. Using default normalization settings."
+            )
+
         return True, f"Loaded {len(df)} irradiation events from {file_path.name}"
     except Exception:
-        return False, traceback.format_exc()
+        err = traceback.format_exc()
+        print(err)
+        return False, err
 
 
 def run_calculation(state: AppState, progress_cb=None) -> tuple[bool, str]:
@@ -65,8 +82,13 @@ def run_calculation(state: AppState, progress_cb=None) -> tuple[bool, str]:
     """
     try:
         from mypyskindose.analyze_data import analyze_data
+        from mypyskindose.debug import dprint
 
         settings = build_settings(state, mode="calculate_dose", output_format="dict")
+
+        dprint("CALCULATION", f"Starting calculation for {state.file_name}")
+        dprint("CALCULATION", f"Phantom: {state.phantom_model}, Offsets: {state.d_lon}, {state.d_ver}, {state.d_lat}")
+        dprint("CALCULATION", f"Normalization: {state.normalization_method}")
 
         # Patch tqdm so we can forward progress to the UI
         if progress_cb is not None:
@@ -81,7 +103,9 @@ def run_calculation(state: AppState, progress_cb=None) -> tuple[bool, str]:
         state.air_kerma = output["air_kerma"]
         return True, f"PSD = {output['psd']:.2f} mGy"
     except Exception:
-        return False, traceback.format_exc()
+        err = traceback.format_exc()
+        print(err)
+        return False, err
 
 
 def event_count_from_state(state: AppState) -> int:

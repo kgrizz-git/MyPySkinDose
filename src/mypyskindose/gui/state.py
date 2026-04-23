@@ -21,6 +21,10 @@ class AppState:
     rdsr_df: pd.DataFrame | None = None
     file_path: Path | None = None
     file_name: str = ""
+    manufacturer: str = ""
+    model: str = ""
+    normalization_method: str = "Unknown"
+    normalization_warnings: list[str] = field(default_factory=list)
 
     # ── Settings (raw values mirrored from UI widgets) ─────────────────────
     phantom_model: str = "human"
